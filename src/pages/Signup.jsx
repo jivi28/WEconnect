@@ -77,6 +77,9 @@ export default function Signup({ onSwitchToLogin }) {
   return (
     <div className="auth-screen">
       <div className="auth-card">
+        <p className="we-wordmark">
+          WE<span>connect</span>
+        </p>
         <p className="eyebrow">Network module</p>
         <h1>Create your account</h1>
         <p className="subtitle">Tell us who you are so we can shape your view of the network.</p>
@@ -140,8 +143,13 @@ export default function Signup({ onSwitchToLogin }) {
 
           {error && <p className="error">{error}</p>}
 
-          <button type="submit" className="btn-primary" disabled={busy}>
-            {busy ? 'Creating account…' : 'Create account'}
+          <button type="submit" className="btn-we" disabled={busy}>
+            <span className="btn-we-label">{busy ? 'Creating account…' : 'Create account'}</span>
+            <span className="btn-we-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
           </button>
         </form>
 

@@ -3,75 +3,55 @@ import { useAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
 import RoleFields from '../components/RoleFields'
 
-export default function Profile() {
+function initials(name) {
+  return (name || '')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0].toUpperCase())
+    .join('')
+}
+
+function formatDate(value) {
+  if (!value) return null
+  return new Date(value).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+}
+
+export default function Profile({ onNavigate }) {
   const { profile, updateProfile, user } = useAuth()
   const [editing, setEditing] = useState(false)
   const [roleData, setRoleData] = useState(profile.role_data || {})
   const [saving, setSaving] = useState(false)
 
-  const canJoinProjects = profile.role === 'student' || profile.role === 'educator'
+  const isAdmin = profile.role === 'admin'
 
-  const [events, setEvents] = useState([])
-  const [myEvents, setMyEvents] = useState([])
-  const [selectedEventId, setSelectedEventId] = useState('')
-  const [addingEvent, setAddingEvent] = useState(false)
-
-  const [projects, setProjects] = useState([])
-  const [myProjects, setMyProjects] = useState([])
-  const [selectedProjectId, setSelectedProjectId] = useState('')
-  const [joiningProject, setJoiningProject] = useState(false)
+  const [networkProfile, setNetworkProfile] = useState(null)
+  const [sourceEvent, setSourceEvent] = useState(null)
+  const [eventCount, setEventCount] = useState(0)
+  const [projectCount, setProjectCount] = useState(0)
+  const [loadingExtras, setLoadingExtras] = useState(true)
 
   useEffect(() => {
-    loadEvents()
-    if (canJoinProjects) loadProjects()
+    loadExtras()
   }, [])
 
-  async function loadEvents() {
-    const [{ data: allEvents }, { data: joined }] = await Promise.all([
-      supabase.from('events').select('*'),
-      supabase.from('user_events').select('event_id, events(name, event_date)').eq('user_id', user.id)
+  async function loadExtras() {
+    setLoadingExtras(true)
+    const [{ data: net }, { data: events }, { data: members }, sourceEventResult] = await Promise.all([
+      supabase.from('network_profiles').select('*').eq('user_id', user.id).maybeSingle(),
+      supabase.from('user_events').select('event_id').eq('user_id', user.id),
+      isAdmin
+        ? Promise.resolve({ data: [] })
+        : supabase.from('project_members').select('project_id').eq('user_id', user.id),
+      profile.source_event_id
+        ? supabase.from('events').select('name, event_date').eq('id', profile.source_event_id).maybeSingle()
+        : Promise.resolve({ data: null })
     ])
-    setEvents(allEvents || [])
-    setMyEvents(joined || [])
-  }
-
-  async function loadProjects() {
-    const [{ data: allProjects }, { data: joined }] = await Promise.all([
-      supabase.from('projects').select('*'),
-      supabase.from('project_members').select('project_id, projects(name, description)').eq('user_id', user.id)
-    ])
-    setProjects(allProjects || [])
-    setMyProjects(joined || [])
-  }
-
-  async function handleAddEvent() {
-    if (!selectedEventId) return
-    setAddingEvent(true)
-    try {
-      const { error } = await supabase
-        .from('user_events')
-        .insert({ user_id: user.id, event_id: selectedEventId })
-      if (error) throw error
-      setSelectedEventId('')
-      await loadEvents()
-    } finally {
-      setAddingEvent(false)
-    }
-  }
-
-  async function handleJoinProject() {
-    if (!selectedProjectId) return
-    setJoiningProject(true)
-    try {
-      const { error } = await supabase
-        .from('project_members')
-        .insert({ user_id: user.id, project_id: selectedProjectId })
-      if (error) throw error
-      setSelectedProjectId('')
-      await loadProjects()
-    } finally {
-      setJoiningProject(false)
-    }
+    setNetworkProfile(net || null)
+    setEventCount((events || []).length)
+    setProjectCount((members || []).length)
+    setSourceEvent(sourceEventResult.data || null)
+    setLoadingExtras(false)
   }
 
   function setRoleField(key, value) {
@@ -88,13 +68,30 @@ export default function Profile() {
     }
   }
 
+  const opportunityTags = isAdmin
+    ? [...(networkProfile?.looking_for || []), ...(networkProfile?.sought_educators || []), ...(networkProfile?.offers || [])]
+    : profile.role === 'educator'
+      ? networkProfile?.offers || []
+      : networkProfile?.looking_for || []
+
   return (
     <div className="panel">
-      <p className="eyebrow">Profile</p>
-      <h2>{profile.name}</h2>
-      <p className="subtitle">
-        {profile.email} · <span className="role-tag">{profile.role}</span>
-      </p>
+      <div className="profile-header">
+        <div className="avatar avatar-lg" aria-hidden="true">
+          {initials(profile.name)}
+        </div>
+        <div>
+          <p className="eyebrow">Profile</p>
+          <h2>{profile.name}</h2>
+          <p className="subtitle">
+            {profile.email} · <span className="role-tag">{profile.role}</span>
+          </p>
+          <p className="muted">
+            Member since {formatDate(profile.created_at) || '—'}
+            {sourceEvent && ` · joined via ${sourceEvent.name}`}
+          </p>
+        </div>
+      </div>
 
       <div className="card">
         <div className="card-header">
@@ -126,7 +123,15 @@ export default function Profile() {
             {Object.entries(profile.role_data || {}).map(([key, value]) => (
               <div key={key} className="detail-row">
                 <dt>{key}</dt>
-                <dd>{value || '—'}</dd>
+                <dd>
+                  {key === 'linkedinUrl' && value ? (
+                    <a href={value} target="_blank" rel="noreferrer">
+                      {value}
+                    </a>
+                  ) : (
+                    value || '—'
+                  )}
+                </dd>
               </div>
             ))}
           </dl>
@@ -135,81 +140,60 @@ export default function Profile() {
 
       <div className="card">
         <div className="card-header">
-          <h3>Events</h3>
+          <h3>Network profile</h3>
+          <button className="link-btn" onClick={() => onNavigate?.('network')}>
+            Edit in Network tab
+          </button>
         </div>
 
-        <dl className="detail-list">
-          {myEvents.length === 0 && <p className="muted">You haven't added any events yet.</p>}
-          {myEvents.map((e) => (
-            <div key={e.event_id} className="detail-row">
-              <dt>{e.events?.name}</dt>
-              <dd>{e.events?.event_date || '—'}</dd>
-            </div>
-          ))}
-        </dl>
-
-        {events.length === 0 ? (
-          <p className="muted">No events have been added yet</p>
-        ) : (
-          <div className="card-actions">
-            <select value={selectedEventId} onChange={(e) => setSelectedEventId(e.target.value)}>
-              <option value="">Select an event…</option>
-              {events.map((ev) => (
-                <option key={ev.id} value={ev.id}>
-                  {ev.name}
-                </option>
+        {loadingExtras ? (
+          <p className="muted">Loading…</p>
+        ) : networkProfile ? (
+          <>
+            <p>{networkProfile.bio || <span className="muted">No bio added yet.</span>}</p>
+            <div className="tag-row">
+              {(networkProfile.interests || []).map((t) => (
+                <span key={`int-${t}`} className="tag">
+                  {t}
+                </span>
               ))}
-            </select>
-            <button
-              className="btn-secondary"
-              onClick={handleAddEvent}
-              disabled={!selectedEventId || addingEvent}
-            >
-              {addingEvent ? 'Adding…' : 'Add'}
-            </button>
-          </div>
+              {opportunityTags.map((t) => (
+                <span key={`opp-${t}`} className="tag tag-outline">
+                  {t}
+                </span>
+              ))}
+              {(networkProfile.expertise_tags || []).map((t) => (
+                <span key={`exp-${t}`} className="tag tag-outline">
+                  {t}
+                </span>
+              ))}
+              {(networkProfile.interests || []).length === 0 && opportunityTags.length === 0 && (
+                <p className="muted">No tags added yet.</p>
+              )}
+            </div>
+          </>
+        ) : (
+          <p className="muted">You haven't set up your network profile yet.</p>
         )}
       </div>
 
-      {canJoinProjects && (
-        <div className="card">
-          <div className="card-header">
-            <h3>Projects</h3>
+      <div className="card">
+        <div className="card-header">
+          <h3>Activity</h3>
+        </div>
+        <dl className="detail-list">
+          <div className="detail-row">
+            <dt>Events attended</dt>
+            <dd>{eventCount}</dd>
           </div>
-
-          <dl className="detail-list">
-            {myProjects.length === 0 && <p className="muted">You haven't joined any projects yet.</p>}
-            {myProjects.map((p) => (
-              <div key={p.project_id} className="detail-row">
-                <dt>{p.projects?.name}</dt>
-                <dd>{p.projects?.description || '—'}</dd>
-              </div>
-            ))}
-          </dl>
-
-          {projects.length === 0 ? (
-            <p className="muted">No projects exist yet — check back once the simulation module adds some</p>
-          ) : (
-            <div className="card-actions">
-              <select value={selectedProjectId} onChange={(e) => setSelectedProjectId(e.target.value)}>
-                <option value="">Select a project…</option>
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
-              <button
-                className="btn-secondary"
-                onClick={handleJoinProject}
-                disabled={!selectedProjectId || joiningProject}
-              >
-                {joiningProject ? 'Joining…' : 'Join project'}
-              </button>
+          {!isAdmin && (
+            <div className="detail-row">
+              <dt>Projects joined</dt>
+              <dd>{projectCount}</dd>
             </div>
           )}
-        </div>
-      )}
+        </dl>
+      </div>
     </div>
   )
 }

@@ -5,13 +5,28 @@
   --line: #e1e1dd;
   --muted: #6b6b68;
   --accent: #2d5bff;
+  --accent-dark: #1c3fd1;
   --accent-soft: #e8ecff;
   --teal: #00b88a;
   --teal-soft: #e3f9f1;
 
-  --font-display: 'Space Grotesk', sans-serif;
+  /* Headlines use the same font as the mind map page (tailwind.config.js
+     fontFamily.sans) — no separate display font, so auth/profile/network
+     screens actually match the mind map instead of approximating it. */
+  --font-display: 'Inter', Helvetica, Arial, sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;
+
+  /* Würth Elektronik brand tokens — copied directly from tailwind.config.js
+     (theme.extend.colors.brand / .ink), which is the real, already-in-use
+     palette on the mind map page (also hardcoded in NetworkGraph.tsx's
+     LINE_COLOR/EXPERT_LINE_COLOR). Not the earlier unverified guesses. */
+  --we-red: #cc0000;
+  --we-red-dark: #a30000;
+  --we-ink: #1f1f1f;
+  --we-gray-700: #605d5c;
+  --we-gray-200: #dedede;
+  --we-gray-50: #f6f6f6;
 }
 
 * {
@@ -20,10 +35,19 @@
 
 body {
   margin: 0;
-  background: var(--paper);
+  background: radial-gradient(circle at 12% -10%, rgba(204, 0, 0, 0.05), transparent 40%), var(--paper);
   color: var(--ink);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
+}
+
+button,
+a,
+.tile-card,
+.match-card,
+.topbar-link {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 h1,
@@ -31,17 +55,18 @@ h2,
 h3 {
   font-family: var(--font-display);
   margin: 0 0 0.25rem;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
+  font-weight: 800;
 }
 
 h1 {
-  font-size: 1.9rem;
+  font-size: 2.3rem;
 }
 h2 {
-  font-size: 1.4rem;
+  font-size: 1.55rem;
 }
 h3 {
-  font-size: 1.05rem;
+  font-size: 1.1rem;
 }
 
 p {
@@ -56,6 +81,16 @@ p {
   font-size: 0.7rem;
   color: var(--muted);
   margin: 0 0 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 3px;
+  background: var(--we-red);
 }
 
 .subtitle {
@@ -93,9 +128,9 @@ textarea:focus-visible {
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
-  background-image: linear-gradient(var(--line) 1px, transparent 1px),
-    linear-gradient(90deg, var(--line) 1px, transparent 1px);
-  background-size: 28px 28px;
+  background-image: radial-gradient(circle at 50% 0%, rgba(204, 0, 0, 0.08), transparent 55%),
+    linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 100% 100%, 28px 28px, 28px 28px;
   background-position: center;
 }
 
@@ -104,9 +139,10 @@ textarea:focus-visible {
   max-width: 420px;
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 1px 2px rgba(20, 21, 26, 0.04);
+  border-top: 4px solid var(--we-red);
+  border-radius: 4px;
+  padding: 2.25rem;
+  box-shadow: 0 24px 60px -20px rgba(20, 21, 26, 0.25), 0 2px 6px rgba(20, 21, 26, 0.06);
 }
 
 .node-mark {
@@ -131,6 +167,66 @@ textarea:focus-visible {
   margin-top: 1rem;
   font-size: 0.9rem;
   color: var(--muted);
+}
+
+.we-wordmark {
+  display: flex;
+  align-items: baseline;
+  gap: 0.15rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.3rem;
+  letter-spacing: -0.02em;
+  color: var(--we-ink);
+  margin-bottom: 1.1rem;
+}
+.we-wordmark span {
+  color: var(--we-red);
+}
+
+/* ---------- Tile cards (events/projects) ---------- */
+
+.tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.tile-card {
+  position: relative;
+  height: 150px;
+  border-radius: 4px;
+  padding: 1rem;
+  display: flex;
+  align-items: flex-end;
+  background-image: linear-gradient(160deg, var(--we-ink) 0%, var(--we-red-dark) 120%);
+  box-shadow: 0 14px 30px -16px rgba(31, 31, 31, 0.5);
+  overflow: hidden;
+  cursor: default;
+}
+.tile-card:hover {
+  transform: translateY(-4px) scale(1.015);
+  box-shadow: 0 22px 40px -16px rgba(204, 0, 0, 0.45);
+}
+
+.tile-card-label {
+  color: var(--surface);
+  font-weight: 800;
+  font-size: 1rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.tile-card-meta {
+  position: absolute;
+  top: 0.7rem;
+  left: 0.9rem;
+  color: rgba(255, 255, 255, 0.75);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
 /* ---------- Forms ---------- */
@@ -163,11 +259,21 @@ select,
 textarea {
   font-family: var(--font-body);
   font-size: 0.95rem;
-  padding: 0.6rem 0.7rem;
+  padding: 0.7rem 0.85rem;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 10px;
   background: var(--surface);
   color: var(--ink);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+input[type='text']:focus,
+input[type='email']:focus,
+input[type='password']:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
 }
 
 textarea {
@@ -210,13 +316,19 @@ textarea {
 }
 
 .btn-primary {
-  background: var(--accent);
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
   color: white;
   border: none;
-  border-radius: 8px;
-  padding: 0.65rem 1.1rem;
+  border-radius: 10px;
+  padding: 0.7rem 1.3rem;
   font-size: 0.95rem;
+  font-weight: 700;
   cursor: pointer;
+  box-shadow: 0 10px 24px -12px rgba(45, 91, 255, 0.5);
+}
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px -10px rgba(45, 91, 255, 0.6);
 }
 .btn-primary:disabled {
   opacity: 0.6;
@@ -226,11 +338,65 @@ textarea {
 .btn-secondary {
   background: var(--accent-soft);
   color: var(--accent);
-  border: none;
-  border-radius: 8px;
-  padding: 0.5rem 0.9rem;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 0.55rem 1rem;
   font-size: 0.88rem;
+  font-weight: 700;
   cursor: pointer;
+}
+.btn-secondary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px -10px rgba(45, 91, 255, 0.4);
+}
+
+/* WE-brand square-arrow CTA — label text beside a solid red square with a
+   white chevron, per the we-online.com button pattern. Used on auth screens
+   only for now; the rest of the app still uses .btn-primary/.btn-secondary. */
+.btn-we {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+.btn-we:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.btn-we:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.btn-we-label {
+  background: var(--surface);
+  color: var(--we-ink);
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 0.75rem 1.3rem;
+  border: 1px solid var(--we-gray-200);
+  border-right: none;
+  border-radius: 4px 0 0 4px;
+}
+.btn-we-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.9rem;
+  height: 2.9rem;
+  background: var(--we-red);
+  border-radius: 0 4px 4px 0;
+  box-shadow: 0 10px 24px -10px rgba(204, 0, 0, 0.6);
+}
+.btn-we:hover:not(:disabled) .btn-we-arrow {
+  background: var(--we-red-dark);
+  box-shadow: 0 14px 28px -10px rgba(163, 0, 0, 0.7);
+}
+.btn-we-arrow svg {
+  width: 15px;
+  height: 15px;
 }
 
 .link-btn {
@@ -245,82 +411,125 @@ textarea {
   text-decoration: underline;
 }
 
-/* ---------- Dashboard shell ---------- */
+/* ---------- Dashboard shell — single persistent top header,
+   light background + WE red accent, used on every authenticated page.
+   Replaces the old dark sidebar (was unbranded leftover scaffold). ---------- */
 
 .shell {
-  display: grid;
-  grid-template-columns: 220px 1fr;
+  display: flex;
+  flex-direction: column;
   min-height: 100vh;
 }
 
-.rail {
-  background: var(--ink);
-  color: white;
-  padding: 1.5rem 1.1rem;
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 0.85rem 2rem;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--we-gray-200);
+  box-shadow: 0 4px 24px -16px rgba(31, 31, 31, 0.25);
 }
 
-.rail .node-mark svg .node {
-  fill: white;
-}
-.rail .node-mark svg .edge {
-  stroke: white;
-}
-
-.rail-nav {
+.topbar-nav {
   display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  margin-top: 1rem;
+  gap: 0.4rem;
+  flex: 1;
 }
 
-.rail-link {
-  text-align: left;
+.topbar-link {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.75);
-  padding: 0.55rem 0.7rem;
   border-radius: 8px;
+  padding: 0.55rem 1rem;
+  font-family: var(--font-body);
   font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--we-gray-700);
   cursor: pointer;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 0.4rem;
+}
+.topbar-link:hover {
+  color: var(--we-ink);
+  background: var(--we-gray-50);
 }
 
-.rail-link-active {
-  background: var(--accent);
-  color: white;
+.topbar-link-active {
+  color: var(--surface);
+  background: var(--we-red);
+  box-shadow: 0 8px 18px -8px rgba(204, 0, 0, 0.55);
+}
+.topbar-link-active:hover {
+  color: var(--surface);
+  background: var(--we-red-dark);
 }
 
-.rail-tag {
+.topbar-tag {
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
+  color: inherit;
+  opacity: 0.75;
 }
 
-.rail-foot {
-  margin-top: auto;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.12);
+.topbar-account {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 0.85rem;
+  color: var(--we-gray-700);
+}
+.topbar-account strong {
+  color: var(--we-ink);
 }
 
-.rail-name {
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--we-red), var(--we-ink));
+  color: var(--surface);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0;
+  flex-shrink: 0;
+}
+
+.avatar-lg {
+  width: 4.2rem;
+  height: 4.2rem;
+  font-size: 1.4rem;
+  box-shadow: 0 8px 20px rgba(204, 0, 0, 0.25);
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1.75rem;
+}
+.profile-header .eyebrow {
+  margin-bottom: 0.15rem;
+}
+.profile-header h2 {
   margin: 0;
-  font-size: 0.92rem;
-}
-.rail-role {
-  margin: 0 0 0.6rem;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.5);
 }
 
 .main {
+  flex: 1;
   padding: 2.5rem 3rem;
+  background: linear-gradient(180deg, var(--we-gray-50) 0%, var(--paper) 100%);
 }
 
 .panel {
@@ -340,9 +549,10 @@ textarea {
 .card {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 12px;
-  padding: 1.4rem;
+  border-radius: 14px;
+  padding: 1.6rem;
   margin-top: 1.25rem;
+  box-shadow: 0 16px 36px -24px rgba(31, 31, 31, 0.35);
 }
 
 .card-header {
@@ -405,21 +615,13 @@ textarea {
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 12px;
-  padding: 1rem;
+  padding: 1.1rem;
+  box-shadow: 0 10px 24px -20px rgba(31, 31, 31, 0.3);
 }
-
-.match-graphic svg .node {
-  fill: var(--ink);
-}
-.match-graphic svg .node-accent {
-  fill: var(--teal);
-}
-.match-graphic svg .edge {
-  stroke: var(--teal);
-  stroke-width: 1.5;
-}
-.match-graphic svg .edge-faint {
-  stroke: var(--line);
+.match-card:hover {
+  border-color: var(--we-red);
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px -16px rgba(204, 0, 0, 0.3);
 }
 
 .match-name {
@@ -437,10 +639,11 @@ textarea {
 .tag {
   font-family: var(--font-mono);
   font-size: 0.72rem;
+  font-weight: 600;
   background: var(--accent-soft);
   color: var(--accent);
   border-radius: 999px;
-  padding: 0.2rem 0.6rem;
+  padding: 0.3rem 0.7rem;
 }
 
 .tag-outline {
@@ -468,6 +671,37 @@ textarea {
 
 .match-action {
   text-align: right;
+}
+
+/* ---------- Embedded network map ---------- */
+
+.map-embed {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px -28px rgba(31, 31, 31, 0.45);
+}
+
+.map-embed-frame {
+  width: 100%;
+  height: calc(100vh - 220px);
+  border: none;
+  display: block;
+}
+
+.map-embed-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(31, 31, 31, 0.05);
+  backdrop-filter: blur(1px);
+  color: var(--we-ink);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
 }
 
 /* ---------- Multi-select dropdown ---------- */
@@ -528,20 +762,16 @@ textarea {
 /* ---------- Responsive ---------- */
 
 @media (max-width: 760px) {
-  .shell {
-    grid-template-columns: 1fr;
+  .topbar {
+    flex-wrap: wrap;
+    padding: 0.75rem 1.1rem;
   }
-  .rail {
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0.9rem 1.1rem;
+  .topbar-nav {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
   }
-  .rail-nav {
-    flex-direction: row;
-    margin-top: 0;
-  }
-  .rail-foot {
+  .topbar-account span {
     display: none;
   }
   .main {
@@ -550,9 +780,6 @@ textarea {
   .match-card {
     grid-template-columns: 1fr;
     text-align: left;
-  }
-  .match-graphic {
-    display: none;
   }
 }
 

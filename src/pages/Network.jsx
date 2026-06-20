@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
 import MultiSelectDropdown from '../components/MultiSelectDropdown'
@@ -11,6 +11,17 @@ import {
   OPPORTUNITY_TYPES,
   TOPIC_AREAS
 } from '../constants/options'
+
+const PUBLIC_PROJECTS_ONLY = 'public_only'
+
+function initials(name) {
+  return (name || '')
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((p) => p[0].toUpperCase())
+    .join('')
+}
 
 // Union every tag-bearing field a network_profiles row can have, regardless of
 // role. Matches fall out naturally wherever vocab overlaps (student<->admin via
@@ -42,11 +53,36 @@ export default function Network() {
   const [soughtEducators, setSoughtEducators] = useState([])
   const [others, setOthers] = useState([])
   const [connections, setConnections] = useState([])
-  const [cachedMatches, setCachedMatches] = useState([])
   const [matchesGeneratedAt, setMatchesGeneratedAt] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  const [showFullMap, setShowFullMap] = useState(false)
+  // The embedded map captures wheel events to zoom itself (NetworkGraph's own
+  // pan/zoom), which otherwise hijacks the page's scroll the moment the
+  // cursor is over it. Gate interaction behind a click so scrolling the page
+  // works normally until the user deliberately engages with the map.
+  const [mapActive, setMapActive] = useState(false)
+  const mapWrapperRef = useRef(null)
+
+  useEffect(() => {
+    if (!mapActive) return
+    function handleClickOutside(e) {
+      if (mapWrapperRef.current && !mapWrapperRef.current.contains(e.target)) {
+        setMapActive(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [mapActive])
+
+  // Admin-only: public projects pinned on the map + an activity signal for
+  // ranking suggested students. Reuses whatever attendance/membership
+  // timestamps already exist rather than a new analytics pipeline.
+  const [publicProjects, setPublicProjects] = useState([])
+  const [activityCounts, setActivityCounts] = useState({})
+  const [projectsByStudent, setProjectsByStudent] = useState({})
+  const [adminFilter, setAdminFilter] = useState('')
 
   useEffect(() => {
     loadEverything()
@@ -70,12 +106,42 @@ export default function Network() {
     setOffers(mine?.offers || [])
     setExpertiseTags(mine?.expertise_tags || [])
     setSoughtEducators(mine?.sought_educators || [])
-    setCachedMatches(mine?.cached_matches || [])
     setMatchesGeneratedAt(mine?.matches_generated_at || null)
     setOthers(everyone || [])
     setConnections(myConnections || [])
+    if (profile.role === 'admin') await loadAdminExtras()
     setLoading(false)
     if (!mine) setEditing(true) // first time here — go straight to the form
+  }
+
+  async function loadAdminExtras() {
+    const [{ data: projectRows }, { data: eventRows }, { data: memberRows }] = await Promise.all([
+      supabase.from('projects').select('*').eq('visibility', 'public'),
+      supabase.from('user_events').select('user_id'),
+      supabase.from('project_members').select('user_id, projects(id, name, visibility)')
+    ])
+
+    const ownerIds = [...new Set((projectRows || []).map((p) => p.owner_id).filter(Boolean))]
+    const { data: ownerProfiles } = ownerIds.length
+      ? await supabase.from('profiles').select('id, name').in('id', ownerIds)
+      : { data: [] }
+    const ownerName = Object.fromEntries((ownerProfiles || []).map((p) => [p.id, p.name]))
+    setPublicProjects((projectRows || []).map((p) => ({ ...p, ownerName: ownerName[p.owner_id] || 'Unknown' })))
+
+    const counts = {}
+    for (const row of [...(eventRows || []), ...(memberRows || [])]) {
+      counts[row.user_id] = (counts[row.user_id] || 0) + 1
+    }
+    setActivityCounts(counts)
+
+    // So admins can see what each suggested student is actually building,
+    // not just an activity count.
+    const byStudent = {}
+    for (const row of memberRows || []) {
+      if (!row.projects) continue
+      byStudent[row.user_id] = [...(byStudent[row.user_id] || []), row.projects]
+    }
+    setProjectsByStudent(byStudent)
   }
 
   async function handleSave(e) {
@@ -120,10 +186,25 @@ export default function Network() {
       .sort((a, b) => b.sharedCount - a.sharedCount)
   }, [others, myTags])
 
-  // Show the cached snapshot if we have one; otherwise fall back to a live
-  // computation. Connection status always comes from the live `connections`
-  // fetch below, never from the cache.
-  const displayedMatches = cachedMatches.length > 0 ? cachedMatches : ranked
+  // Always show live-computed matches. A snapshot-first approach went stale
+  // the moment either side edited their tags (e.g. two people who both add
+  // "Machine Learning" as an interest won't show up for each other until
+  // someone happens to hit "Refresh my matches" *after* both edits exist) —
+  // so the cache is now write-only bookkeeping for "last refreshed", not the
+  // thing actually rendered. Connection status always comes from the live
+  // `connections` fetch below.
+  const displayedMatches = ranked
+
+  // Admin-only: students whose tags overlap the admin's, ranked by the
+  // activity signal computed in loadAdminExtras (events attended + projects
+  // joined), filtered by expertise tag if one is selected above.
+  const suggestedStudents = useMemo(() => {
+    if (!isAdmin) return []
+    return ranked
+      .filter((p) => p.profiles?.role === 'student')
+      .filter((p) => !adminFilter || adminFilter === PUBLIC_PROJECTS_ONLY || combinedTags(p).includes(adminFilter.toLowerCase()))
+      .sort((a, b) => (activityCounts[b.user_id] || 0) - (activityCounts[a.user_id] || 0) || b.sharedCount - a.sharedCount)
+  }, [isAdmin, ranked, activityCounts, adminFilter])
 
   function connectionWith(otherUserId) {
     return connections.find((c) => c.user_a === otherUserId || c.user_b === otherUserId)
@@ -160,7 +241,6 @@ export default function Network() {
         .from('network_profiles')
         .upsert({ user_id: user.id, cached_matches: trimmed, matches_generated_at: generatedAt })
       if (error) throw error
-      setCachedMatches(trimmed)
       setMatchesGeneratedAt(generatedAt)
     } finally {
       setRefreshing(false)
@@ -168,6 +248,30 @@ export default function Network() {
   }
 
   if (loading) return <div className="panel">Loading your network…</div>
+
+  // Full-page takeover, not a boxed-in iframe appended below the list — this
+  // replaces the whole tab so the map reads as part of the app, still under
+  // the persistent top header from Home.jsx.
+  if (showFullMap) {
+    return (
+      <div>
+        <div className="card-actions" style={{ marginBottom: '0.75rem' }}>
+          <button className="btn-secondary" onClick={() => setShowFullMap(false)}>
+            Hide network map
+          </button>
+        </div>
+        <div className="map-embed" ref={mapWrapperRef} onClick={() => setMapActive(true)}>
+          <iframe
+            src="/mindmap.html?embedded=1"
+            title="Network graph"
+            className="map-embed-frame"
+            style={{ pointerEvents: mapActive ? 'auto' : 'none' }}
+          />
+          {!mapActive && <div className="map-embed-hint">Click to interact with the map</div>}
+        </div>
+      </div>
+    )
+  }
 
   if (editing) {
     return (
@@ -284,10 +388,50 @@ export default function Network() {
         </div>
       </div>
 
-      {displayedMatches.length === 0 && <p className="muted">No one else has joined the network yet.</p>}
+      {isAdmin && (
+        <div className="field">
+          <span>Filter</span>
+          <select value={adminFilter} onChange={(e) => setAdminFilter(e.target.value)}>
+            <option value="">All suggestions</option>
+            <option value={PUBLIC_PROJECTS_ONLY}>Public projects only</option>
+            {TOPIC_AREAS.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
-      <ul className="match-list">
-        {displayedMatches.map((person) => {
+      {isAdmin && (
+        <div className="card">
+          <div className="card-header">
+            <h3>Public projects</h3>
+          </div>
+          {publicProjects.length === 0 ? (
+            <p className="muted">No public projects yet.</p>
+          ) : (
+            <div className="tile-grid">
+              {publicProjects.map((p) => (
+                <div key={p.id} className="tile-card">
+                  <span className="tile-card-meta">{p.ownerName}</span>
+                  <span className="tile-card-label">{p.name}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {!(isAdmin && adminFilter === PUBLIC_PROJECTS_ONLY) && (
+        <>
+          {isAdmin && <h3>Suggested active students</h3>}
+          {(isAdmin ? suggestedStudents : displayedMatches).length === 0 && (
+            <p className="muted">No one else has joined the network yet.</p>
+          )}
+
+          <ul className="match-list">
+            {(isAdmin ? suggestedStudents : displayedMatches).map((person) => {
           const name = person.profiles?.name || person.name || 'Someone'
           const role = person.profiles?.role || person.role
           const conn = connectionWith(person.user_id)
@@ -300,18 +444,20 @@ export default function Network() {
 
           return (
             <li key={person.user_id} className="match-card">
-              <div className="match-graphic" aria-hidden="true">
-                <svg viewBox="0 0 60 30" width="60" height="30">
-                  <line x1="8" y1="22" x2="52" y2="8" className={person.sharedCount ? 'edge' : 'edge edge-faint'} />
-                  <circle cx="8" cy="22" r="4" className="node" />
-                  <circle cx="52" cy="8" r="4" className={person.sharedCount ? 'node node-accent' : 'node'} />
-                </svg>
+              <div className="avatar" aria-hidden="true">
+                {initials(name)}
               </div>
               <div className="match-body">
                 <p className="match-name">
                   {name} <span className="role-tag">{role}</span>
                 </p>
                 {person.bio && <p className="muted">{person.bio}</p>}
+                {isAdmin && (projectsByStudent[person.user_id] || []).length > 0 && (
+                  <p className="muted">
+                    Building:{' '}
+                    {projectsByStudent[person.user_id].map((p) => p.name).join(', ')}
+                  </p>
+                )}
                 <div className="tag-row">
                   {hasFullTagData ? (
                     <>
@@ -375,9 +521,17 @@ export default function Network() {
                 {conn && conn.status === 'accepted' && <span className="muted">Connected</span>}
               </div>
             </li>
-          )
-        })}
-      </ul>
+              )
+            })}
+          </ul>
+        </>
+      )}
+
+      <div className="card-actions">
+        <button className="btn-secondary" onClick={() => setShowFullMap(true)}>
+          Show network
+        </button>
+      </div>
     </div>
   )
 }

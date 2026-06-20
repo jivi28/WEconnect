@@ -24,16 +24,9 @@ export default function Login({ onSwitchToSignup }) {
   return (
     <div className="auth-screen">
       <div className="auth-card">
-        <div className="node-mark" aria-hidden="true">
-          <svg viewBox="0 0 120 60" width="120" height="60">
-            <line x1="20" y1="40" x2="60" y2="14" className="edge" />
-            <line x1="60" y1="14" x2="100" y2="36" className="edge" />
-            <line x1="20" y1="40" x2="100" y2="36" className="edge edge-faint" />
-            <circle cx="20" cy="40" r="5" className="node" />
-            <circle cx="60" cy="14" r="6" className="node node-accent" />
-            <circle cx="100" cy="36" r="5" className="node" />
-          </svg>
-        </div>
+        <p className="we-wordmark">
+          WE<span>connect</span>
+        </p>
         <p className="eyebrow">Network module</p>
         <h1>Log in</h1>
         <p className="subtitle">Pick up where your connections left off.</p>
@@ -62,8 +55,13 @@ export default function Login({ onSwitchToSignup }) {
 
           {error && <p className="error">{error}</p>}
 
-          <button type="submit" className="btn-primary" disabled={busy}>
-            {busy ? 'Logging in…' : 'Log in'}
+          <button type="submit" className="btn-we" disabled={busy}>
+            <span className="btn-we-label">{busy ? 'Logging in…' : 'Log in'}</span>
+            <span className="btn-we-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
           </button>
         </form>
 

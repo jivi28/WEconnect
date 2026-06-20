@@ -172,3 +172,47 @@ alter table network_profiles add column if not exists expertise_tags text[] not 
 alter table network_profiles add column if not exists sought_educators text[] not null default '{}';
 alter table network_profiles add column if not exists cached_matches jsonb;
 alter table network_profiles add column if not exists matches_generated_at timestamptz;
+
+-- 6. One-time onboarding (student/educator only — admins skip it) and
+-- per-project visibility for the public/private toggle on the map.
+alter table profiles add column if not exists onboarding_completed boolean not null default false;
+
+alter table projects add column if not exists visibility text not null default 'private'
+  check (visibility in ('public', 'private'));
+
+create table if not exists onboarding_responses (
+  id uuid primary key default gen_random_uuid(),
+  user_id uuid not null references profiles (id) on delete cascade,
+  event_id uuid references events (id),
+  event_other text,
+  event_rating smallint check (event_rating between 1 and 5),
+  collaboration_interest text check (collaboration_interest in ('yes', 'maybe', 'no')),
+  created_at timestamptz not null default now()
+);
+
+alter table onboarding_responses enable row level security;
+
+create policy "Users insert their own onboarding response"
+  on onboarding_responses for insert
+  to authenticated
+  with check (auth.uid() = user_id);
+
+create policy "Users read their own onboarding response"
+  on onboarding_responses for select
+  to authenticated
+  using (auth.uid() = user_id);
+
+create policy "Admins read all onboarding responses"
+  on onboarding_responses for select
+  to authenticated
+  using (exists (select 1 from profiles where profiles.id = auth.uid() and profiles.role = 'admin'));
+
+-- 7. Project ownership — needed so the public/private visibility toggle has
+-- someone authorized to flip it. There was previously no UPDATE policy on
+-- projects at all.
+alter table projects add column if not exists owner_id uuid references auth.users (id);
+
+create policy "Owners can update their own project"
+  on projects for update
+  to authenticated
+  using (auth.uid() = owner_id);
