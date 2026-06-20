@@ -140,9 +140,15 @@ function EventDetail() {
     if (ev.slides_path) {
       await supabase.storage.from(SLIDES_BUCKET).remove([ev.slides_path])
     }
-    const { error } = await supabase.from('events').delete().eq('id', ev.id)
+    // .select('id') so a missing/denying RLS policy surfaces as an empty
+    // result (caught below) instead of looking like success: a delete that
+    // matches zero rows under RLS returns no error either way.
+    const { data, error } = await supabase.from('events').delete().eq('id', ev.id).select('id')
     setBusy(false)
     if (error) return setErr(error.message)
+    if (!data || data.length === 0) {
+      return setErr("Delete didn't go through — you may not have permission to delete this event.")
+    }
     navigate('/', { state: { initialTab: 'events' } })
   }
 

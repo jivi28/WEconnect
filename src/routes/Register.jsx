@@ -78,68 +78,103 @@ export default function Register() {
 
   if (loadErr) {
     return (
-      <div className="wrap">
-        <div className="card">
-          <h2>Registration</h2>
-          <p className="err">{loadErr}</p>
-          <Link to="/">Home</Link>
+      <div className="auth-screen">
+        <div className="auth-card">
+          <p className="we-wordmark">
+            WE<span>connect</span>
+          </p>
+          <p className="eyebrow">Event registration</p>
+          <h1>Registration</h1>
+          <p className="error">{loadErr}</p>
+          <p className="switch-line">
+            <Link to="/">Back to home</Link>
+          </p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="wrap">
-      <div className="card">
+    <div className="auth-screen">
+      <div className="auth-card">
+        <p className="we-wordmark">
+          WE<span>connect</span>
+        </p>
+        <p className="eyebrow">Event registration</p>
         <h1>Register for the event</h1>
+
         {event ? (
-          <p className="muted">
-            <b>{event.name}</b>
+          <p className="subtitle">
+            <strong>{event.name}</strong>
             {event.event_date ? ` — ${formatDate(event.event_date)}` : ''}
           </p>
         ) : (
-          <p className="muted">Loading event…</p>
+          <p className="subtitle">Loading event…</p>
         )}
-        <p className="muted">
-          Sign up to join WEconnect and unlock this event's slides.
-        </p>
+        <p className="subtitle">Sign up to join WEconnect and unlock this event's slides.</p>
 
-        <form onSubmit={onSubmit}>
-          <label>Full name</label>
-          <input
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-            required
-          />
-          <label>Username</label>
-          <input
-            value={form.username}
-            onChange={(e) => setForm({ ...form, username: e.target.value })}
-            placeholder="e.g. circuit_otter42"
-            required
-          />
-          <label>Email</label>
-          <input
-            type="email"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-            required
-          />
-          <label>Password</label>
-          <input
-            type="password"
-            minLength={6}
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-            required
-          />
-          <button disabled={busy || !event}>
-            {busy ? 'Creating account…' : 'Register & get slides'}
+        <form onSubmit={onSubmit} className="form">
+          <label className="field">
+            <span>Full name</span>
+            <input
+              type="text"
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              required
+            />
+          </label>
+
+          <label className="field">
+            <span>Username</span>
+            <input
+              type="text"
+              value={form.username}
+              onChange={(e) => setForm({ ...form, username: e.target.value })}
+              placeholder="e.g. circuit_otter42"
+              required
+            />
+            <small className="muted">This is the handle that shows up on the leaderboard.</small>
+          </label>
+
+          <label className="field">
+            <span>Email</span>
+            <input
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              autoComplete="email"
+              required
+            />
+          </label>
+
+          <label className="field">
+            <span>Password</span>
+            <input
+              type="password"
+              minLength={6}
+              value={form.password}
+              onChange={(e) => setForm({ ...form, password: e.target.value })}
+              autoComplete="new-password"
+              required
+            />
+          </label>
+
+          {err && <p className="error">{err}</p>}
+          {msg && <p className="success">{msg}</p>}
+
+          <button type="submit" className="btn-we" disabled={busy || !event}>
+            <span className="btn-we-label">{busy ? 'Creating account…' : 'Register & get slides'}</span>
+            <span className="btn-we-arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
+                <path d="M5 12h14M13 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
           </button>
         </form>
 
-        {err && <p className="err">{err}</p>}
-        {msg && <p className="ok">{msg}</p>}
+        <p className="switch-line">
+          <Link to="/">Back to home</Link>
+        </p>
       </div>
     </div>
   )
