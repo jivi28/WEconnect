@@ -6,10 +6,8 @@ interface FilterPanelProps {
   onToggleRole: (role: Role) => void
   onMinStrengthChange: (value: number) => void
   onInterestQueryChange: (value: string) => void
-  onEventFilterChange: (value: string) => void
-  onProjectFilterChange: (value: string) => void
-  events: string[]
-  projects: string[]
+  personLimit: number
+  onPersonLimitChange: (value: number) => void
 }
 
 const ROLE_LABELS: { role: Role; label: string }[] = [
@@ -23,14 +21,25 @@ export default function FilterPanel({
   onToggleRole,
   onMinStrengthChange,
   onInterestQueryChange,
-  onEventFilterChange,
-  onProjectFilterChange,
-  events,
-  projects
+  personLimit,
+  onPersonLimitChange
 }: FilterPanelProps) {
   return (
     <aside className="flex h-full flex-col overflow-y-auto rounded-md border border-graylight bg-white p-5 we-scrollbar">
       <p className="text-xs font-bold uppercase tracking-wide text-graydark">Connection Filters</p>
+
+      <div className="mt-4">
+        <p className="text-[12px] font-semibold text-ink">Show top connections</p>
+        <select
+          value={personLimit}
+          onChange={(e) => onPersonLimitChange(Number(e.target.value))}
+          className="mt-2 w-full rounded-md border border-graylight px-3 py-2 text-sm text-ink focus:border-brand-red focus:outline-none"
+        >
+          <option value={10}>10</option>
+          <option value={20}>20</option>
+          <option value={30}>30</option>
+        </select>
+      </div>
 
       <div className="mt-4">
         <p className="text-[12px] font-semibold text-ink">Role</p>
@@ -74,38 +83,6 @@ export default function FilterPanel({
           placeholder="e.g. Embedded Systems"
           className="mt-2 w-full rounded-md border border-graylight px-3 py-2 text-sm text-ink placeholder:text-graymed focus:border-brand-red focus:outline-none"
         />
-      </div>
-
-      <div className="mt-5">
-        <p className="text-[12px] font-semibold text-ink">Event</p>
-        <select
-          value={filters.eventFilter}
-          onChange={(e) => onEventFilterChange(e.target.value)}
-          className="mt-2 w-full rounded-md border border-graylight px-3 py-2 text-sm text-ink focus:border-brand-red focus:outline-none"
-        >
-          <option value="">All events</option>
-          {events.map((event) => (
-            <option key={event} value={event}>
-              {event}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="mt-5">
-        <p className="text-[12px] font-semibold text-ink">Project</p>
-        <select
-          value={filters.projectFilter}
-          onChange={(e) => onProjectFilterChange(e.target.value)}
-          className="mt-2 w-full rounded-md border border-graylight px-3 py-2 text-sm text-ink focus:border-brand-red focus:outline-none"
-        >
-          <option value="">All projects</option>
-          {projects.map((project) => (
-            <option key={project} value={project}>
-              {project}
-            </option>
-          ))}
-        </select>
       </div>
 
       <Legend />

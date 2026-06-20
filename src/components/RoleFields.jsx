@@ -15,7 +15,7 @@ export const ROLE_FIELD_DEFS = {
     { key: 'subject', label: 'Subject / department', type: 'select', options: FIELDS_OF_STUDY },
     { key: 'linkedinUrl', label: 'LinkedIn (optional)', type: 'text' }
   ],
-  admin: [
+  wurth_employee: [
     { key: 'site', label: 'Standort (site)', type: 'select', options: SITES },
     { key: 'businessUnit', label: 'Business unit / Abteilung', type: 'select', options: BUSINESS_UNITS },
     { key: 'contactChannel', label: 'Preferred contact channel', type: 'select', options: CONTACT_CHANNELS },

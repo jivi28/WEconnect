@@ -2,7 +2,7 @@ import Avatar from './Avatar'
 import ArrowButton from './ArrowButton'
 import type { CurrentUser } from '../types'
 
-const NAV_ITEMS = ['Network', 'Events', 'Projects', 'Interests']
+const NAV_ITEMS = ['Network', 'Interests']
 
 interface HeaderProps {
   currentUser: CurrentUser
@@ -35,7 +35,7 @@ export default function Header({ currentUser, activeNav, onNavChange }: HeaderPr
           </svg>
           <input
             type="text"
-            placeholder="Search people, projects, events..."
+            placeholder="Search people and interests..."
             className="ml-2 w-full bg-transparent text-sm text-white placeholder:text-graymed focus:outline-none"
           />
         </div>

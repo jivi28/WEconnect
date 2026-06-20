@@ -33,23 +33,21 @@ export default function HoverProfileCard({ person, x, y }: HoverProfileCardProps
 
         <dl className="mt-3 space-y-1.5 text-[12.5px]">
           <div className="flex gap-2">
-            <dt className="w-24 shrink-0 text-graymed">Email</dt>
-            <dd className="truncate text-graydark">{person.email}</dd>
-          </div>
-          <div className="flex gap-2">
             <dt className="w-24 shrink-0 text-graymed">
               {isExpert ? 'Expertise' : 'Main interest'}
             </dt>
             <dd className="text-ink">{person.mainInterest}</dd>
           </div>
           <div className="flex gap-2">
-            <dt className="w-24 shrink-0 text-graymed">Projects</dt>
-            <dd className="text-ink">{person.projectNames.join(', ') || '—'}</dd>
-          </div>
-          <div className="flex gap-2">
             <dt className="w-24 shrink-0 text-graymed">Why connected</dt>
             <dd className="text-graydark">{person.connectionReason}</dd>
           </div>
+          {person.email && (
+            <div className="flex gap-2">
+              <dt className="w-24 shrink-0 text-graymed">Email</dt>
+              <dd className="truncate text-ink">{person.email}</dd>
+            </div>
+          )}
         </dl>
 
         <div className="mt-3 flex items-center justify-between rounded-md bg-soft px-2.5 py-1.5">

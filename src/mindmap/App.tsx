@@ -11,17 +11,19 @@ import type { CurrentUser, Filters, Person, Role } from './types'
 const INITIAL_FILTERS: Filters = {
   roles: { student: true, educator: true, expert: true },
   minStrength: 0,
-  interestQuery: '',
-  eventFilter: '',
-  projectFilter: ''
+  interestQuery: ''
 }
+
+const VALID_LIMITS = [10, 20, 30]
+const DEFAULT_LIMIT = 10
 
 export default function App() {
   // When embedded in the app's own iframe (Network tab's "Show network"),
   // the app already has its own persistent header — skip rendering this
   // page's header so there's only one. Visiting mindmap.html directly still
   // shows it.
-  const isEmbedded = new URLSearchParams(window.location.search).get('embedded') === '1'
+  const params = new URLSearchParams(window.location.search)
+  const isEmbedded = params.get('embedded') === '1'
 
   const [activeNav, setActiveNav] = useState('Network')
   const [activeChip, setActiveChip] = useState<ChipKey>('all')
@@ -29,33 +31,36 @@ export default function App() {
   const [hoveredId, setHoveredId] = useState<string | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
 
+  // Caller (the Network tab) can seed this via ?limit=10|20|30; visiting
+  // mindmap.html directly falls back to the default. Showing hundreds of
+  // nodes isn't useful, so this caps how many render — see personLimit
+  // below for how the cap is applied (top-N by score, not list order).
+  const limitFromQuery = Number(params.get('limit'))
+  const [personLimit, setPersonLimit] = useState(
+    VALID_LIMITS.includes(limitFromQuery) ? limitFromQuery : DEFAULT_LIMIT
+  )
+
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState(false)
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
   const [people, setPeople] = useState<Person[]>([])
-  const [allEvents, setAllEvents] = useState<string[]>([])
-  const [allProjects, setAllProjects] = useState<string[]>([])
 
   useEffect(() => {
     loadNetworkData()
       .then((d) => {
         setCurrentUser(d.currentUser)
         setPeople(d.people)
-        setAllEvents(d.allEvents)
-        setAllProjects(d.allProjects)
       })
       .catch(() => setLoadError(true))
       .finally(() => setLoading(false))
   }, [])
 
   const filteredPeople = useMemo(() => {
-    return people.filter((person) => {
+    const matching = people.filter((person) => {
       if (!filters.roles[person.role]) return false
       if (person.connectionStrength < filters.minStrength) return false
       if (activeChip === 'strongest' && person.connectionStrength < 75) return false
       if (activeChip !== 'all' && activeChip !== 'strongest' && person.role !== activeChip) return false
-      if (filters.eventFilter && !person.sharedEvents.includes(filters.eventFilter)) return false
-      if (filters.projectFilter && !person.projectNames.includes(filters.projectFilter)) return false
       if (filters.interestQuery) {
         const q = filters.interestQuery.toLowerCase()
         const haystack = [person.mainInterest, ...person.sharedInterests].join(' ').toLowerCase()
@@ -63,7 +68,11 @@ export default function App() {
       }
       return true
     })
-  }, [filters, activeChip])
+    // Pick the top-N highest-scoring matches, but don't treat that ranking
+    // as a list order — computeLayout() places all N of them together,
+    // using each person's score only to set their distance from center.
+    return [...matching].sort((a, b) => b.connectionStrength - a.connectionStrength).slice(0, personLimit)
+  }, [filters, activeChip, people, personLimit])
 
   const selectedPerson = selectedId ? people.find((p) => p.id === selectedId) ?? null : null
 
@@ -95,10 +104,8 @@ export default function App() {
             onToggleRole={toggleRole}
             onMinStrengthChange={(v) => setFilters((f) => ({ ...f, minStrength: v }))}
             onInterestQueryChange={(v) => setFilters((f) => ({ ...f, interestQuery: v }))}
-            onEventFilterChange={(v) => setFilters((f) => ({ ...f, eventFilter: v }))}
-            onProjectFilterChange={(v) => setFilters((f) => ({ ...f, projectFilter: v }))}
-            events={allEvents}
-            projects={allProjects}
+            personLimit={personLimit}
+            onPersonLimitChange={setPersonLimit}
           />
         </div>
 

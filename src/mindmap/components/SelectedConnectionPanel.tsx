@@ -48,10 +48,6 @@ export default function SelectedConnectionPanel({ person }: SelectedConnectionPa
 
       <dl className="mt-5 space-y-3 text-sm">
         <div>
-          <dt className="text-[11px] uppercase tracking-wide text-graymed">Email</dt>
-          <dd className="text-graydark">{person.email}</dd>
-        </div>
-        <div>
           <dt className="text-[11px] uppercase tracking-wide text-graymed">
             {isExpert ? 'Expertise area' : 'Main interest'}
           </dt>
@@ -63,21 +59,17 @@ export default function SelectedConnectionPanel({ person }: SelectedConnectionPa
             <dd className="text-graydark">{person.detailLine}</dd>
           </div>
         )}
+        {person.email && (
+          <div>
+            <dt className="text-[11px] uppercase tracking-wide text-graymed">Email</dt>
+            <dd className="text-ink">
+              <a href={`mailto:${person.email}`} className="hover:underline">
+                {person.email}
+              </a>
+            </dd>
+          </div>
+        )}
       </dl>
-
-      <div className="mt-4">
-        <p className="text-[11px] uppercase tracking-wide text-graymed">Projects</p>
-        <div className="mt-1.5 flex flex-wrap gap-1.5">
-          {person.projectNames.map((proj) => (
-            <span
-              key={proj}
-              className="rounded-full bg-brand-redSoft px-2.5 py-1 text-[11px] font-medium text-brand-red"
-            >
-              {proj}
-            </span>
-          ))}
-        </div>
-      </div>
 
       {person.sharedInterests.length > 0 && (
         <div className="mt-4">
@@ -89,22 +81,6 @@ export default function SelectedConnectionPanel({ person }: SelectedConnectionPa
                 className="rounded-full border border-graylight bg-soft px-2.5 py-1 text-[11px] font-medium text-graydark"
               >
                 {interest}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {person.sharedEvents.length > 0 && (
-        <div className="mt-4">
-          <p className="text-[11px] uppercase tracking-wide text-graymed">Shared events</p>
-          <div className="mt-1.5 flex flex-wrap gap-1.5">
-            {person.sharedEvents.map((event) => (
-              <span
-                key={event}
-                className="rounded-full border border-graylight bg-soft px-2.5 py-1 text-[11px] font-medium text-graydark"
-              >
-                {event}
               </span>
             ))}
           </div>
@@ -131,12 +107,6 @@ export default function SelectedConnectionPanel({ person }: SelectedConnectionPa
         <button className="group flex flex-1 items-center justify-between overflow-hidden">
           <span className="flex-1 bg-ink px-3 py-2 text-left text-[12px] font-bold uppercase tracking-wide text-white">
             Message
-          </span>
-          <ArrowButton size={34} />
-        </button>
-        <button className="group flex flex-1 items-center justify-between overflow-hidden border border-graylight">
-          <span className="flex-1 px-3 py-2 text-left text-[12px] font-bold uppercase tracking-wide text-graydark">
-            View Projects
           </span>
           <ArrowButton size={34} />
         </button>

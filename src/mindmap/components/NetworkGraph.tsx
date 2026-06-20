@@ -24,6 +24,21 @@ const LINE_COLOR = { strong: '#CC0000', medium: '#959595', weak: '#DEDEDE' }
 const EXPERT_LINE_COLOR = { strong: '#A30000', medium: '#605D5C', weak: '#959595' }
 const LINE_WIDTH = { strong: 3.2, medium: 2, weak: 1.1 }
 
+// A small deterministic bend makes the spokes feel more like an organic
+// mind map while keeping their endpoints (and therefore score distance)
+// exact. Each person always gets the same curve after re-rendering.
+function spokePath(personId: string, x: number, y: number) {
+  const dx = x - CENTER.x
+  const dy = y - CENTER.y
+  const length = Math.hypot(dx, dy) || 1
+  const hash = [...personId].reduce((sum, char) => sum + char.charCodeAt(0), 0)
+  const direction = hash % 2 === 0 ? 1 : -1
+  const bend = Math.min(24, length * 0.07) * direction
+  const controlX = CENTER.x + dx * 0.52 - (dy / length) * bend
+  const controlY = CENTER.y + dy * 0.52 + (dx / length) * bend
+  return `M ${CENTER.x} ${CENTER.y} Q ${controlX} ${controlY} ${x} ${y}`
+}
+
 export default function NetworkGraph({
   currentUser,
   people,
@@ -140,12 +155,10 @@ export default function NetworkGraph({
             const width = LINE_WIDTH[tier] * (isActive ? 1.6 : 1)
 
             return (
-              <line
+              <path
                 key={`line-${person.id}`}
-                x1={CENTER.x}
-                y1={CENTER.y}
-                x2={pos.x}
-                y2={pos.y}
+                d={spokePath(person.id, pos.x, pos.y)}
+                fill="none"
                 stroke={stroke}
                 strokeWidth={width}
                 strokeLinecap="round"

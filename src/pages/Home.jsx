@@ -13,12 +13,12 @@ const BASE_TABS = [
 export default function Home() {
   const { profile, logout } = useAuth()
   const [tab, setTab] = useState('profile')
-  const isAdmin = profile.role === 'admin'
+  const isWurthEmployee = profile.role === 'wurth_employee'
 
   const tabs = [
     ...BASE_TABS,
-    ...(isAdmin ? [] : [{ id: 'projects', label: 'Projects' }]),
-    ...(isAdmin ? [{ id: 'analysis', label: 'Analysis', placeholder: true }] : [])
+    ...(isWurthEmployee ? [] : [{ id: 'projects', label: 'Projects' }]),
+    ...(isWurthEmployee ? [{ id: 'analysis', label: 'Analysis', placeholder: true }] : [])
   ]
 
   return (
@@ -58,7 +58,7 @@ export default function Home() {
         {tab === 'profile' && <Profile onNavigate={setTab} />}
         {tab === 'network' && <Network />}
         {tab === 'events' && <EventsTab />}
-        {tab === 'projects' && !isAdmin && <ProjectsTab />}
+        {tab === 'projects' && !isWurthEmployee && <ProjectsTab />}
         {tab === 'analysis' && <Placeholder name="Analysis" />}
       </main>
     </div>

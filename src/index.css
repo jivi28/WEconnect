@@ -596,6 +596,11 @@ textarea {
   color: var(--accent);
 }
 
+.role-tag-strong {
+  color: var(--we-red);
+  font-weight: 700;
+}
+
 /* ---------- Network matches ---------- */
 
 .match-list {

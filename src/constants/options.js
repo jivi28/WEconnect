@@ -85,17 +85,30 @@ export const SITES = ['Waldenburg', 'Munich', 'Niedernhall', 'Waldzimmern']
 
 export const CONTACT_CHANNELS = ['Platform inbox', 'Email']
 
-// Derived from OPPORTUNITY_TYPES/EDUCATOR_OFFERINGS so these can't drift out of sync.
-export const ADMIN_SOUGHT_STUDENTS = OPPORTUNITY_TYPES.filter((t) => t !== 'Kostenlose Bauteile')
+// MOCK university-affiliation check for signup (Task 2) — not a real
+// integration with any university system. A student/educator signup email
+// whose domain matches one of these is auto-verified; everything else
+// stays "pending". Matches the universities already used in the demo seed
+// data (supabase/seed_network_profiles.sql).
+export const UNIVERSITY_EMAIL_ALLOWLIST = [
+  'tum.de',
+  'kit.edu',
+  'rwth-aachen.de',
+  'uni-stuttgart.de',
+  'tu-berlin.de'
+]
 
-export const ADMIN_SOUGHT_EDUCATORS = [
+// Derived from OPPORTUNITY_TYPES/EDUCATOR_OFFERINGS so these can't drift out of sync.
+export const WURTH_SOUGHT_STUDENTS = OPPORTUNITY_TYPES.filter((t) => t !== 'Kostenlose Bauteile')
+
+export const WURTH_SOUGHT_EDUCATORS = [
   'Professor/Dozent',
   'Laborpraktikum-Betreuer',
   'Projektarbeit-Betreuer',
   'Hochschulgruppen-Berater'
 ]
 
-export const ADMIN_OFFERS = EDUCATOR_OFFERINGS.filter((t) =>
+export const WURTH_OFFERS = EDUCATOR_OFFERINGS.filter((t) =>
   [
     'Gastvortrag / Expertenvortrag',
     'Exkursion zum Standort',

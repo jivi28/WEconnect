@@ -2,13 +2,25 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
 import RoleFields from '../components/RoleFields'
+import { UNIVERSITY_EMAIL_ALLOWLIST } from '../constants/options'
 import { readableAuthError } from './Login'
 
 const ROLES = [
   { value: 'student', label: 'Student' },
   { value: 'educator', label: 'Educator' },
-  { value: 'admin', label: 'Admin' }
+  { value: 'wurth_employee', label: 'Würth Employee' }
 ]
+
+// MOCK university/staff-affiliation check — there is no real integration
+// with any university's systems here. It only compares the signup email's
+// domain against a small hardcoded allowlist (UNIVERSITY_EMAIL_ALLOWLIST).
+// A match auto-verifies the account for this hackathon demo; anything else
+// leaves it "pending" and gated behind the verification-pending screen
+// (see App.jsx) until someone updates it directly in the database.
+function passesMockAffiliationCheck(email) {
+  const domain = (email.split('@')[1] || '').toLowerCase()
+  return UNIVERSITY_EMAIL_ALLOWLIST.includes(domain)
+}
 
 export default function Signup({ onSwitchToLogin }) {
   const { signup } = useAuth()
@@ -17,11 +29,14 @@ export default function Signup({ onSwitchToLogin }) {
   const [password, setPassword] = useState('')
   const [role, setRole] = useState('student')
   const [roleData, setRoleData] = useState({})
+  const [affiliationId, setAffiliationId] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [confirmNotice, setConfirmNotice] = useState(false)
   const [events, setEvents] = useState([])
   const [sourceEventId, setSourceEventId] = useState('')
+
+  const requiresAffiliationCheck = role === 'student' || role === 'educator'
 
   useEffect(() => {
     supabase
@@ -40,14 +55,22 @@ export default function Signup({ onSwitchToLogin }) {
     setBusy(true)
     try {
       const finalRoleData =
-        role === 'admin' ? { ...roleData, organization: 'Würth Elektronik' } : roleData
+        role === 'wurth_employee'
+          ? { ...roleData, organization: 'Würth Elektronik' }
+          : { ...roleData, affiliationId }
+      const verificationStatus = requiresAffiliationCheck
+        ? passesMockAffiliationCheck(email)
+          ? 'verified'
+          : 'pending'
+        : 'verified'
       const { needsEmailConfirmation } = await signup({
         name,
         email,
         password,
         role,
         roleData: finalRoleData,
-        sourceEventId
+        sourceEventId,
+        verificationStatus
       })
       if (needsEmailConfirmation) setConfirmNotice(true)
     } catch (err) {
@@ -128,6 +151,22 @@ export default function Signup({ onSwitchToLogin }) {
           </div>
 
           <RoleFields role={role} values={roleData} onChange={setRoleField} />
+
+          {requiresAffiliationCheck && (
+            <label className="field">
+              <span>Student/staff ID</span>
+              <input
+                type="text"
+                required
+                value={affiliationId}
+                onChange={(e) => setAffiliationId(e.target.value)}
+                placeholder="Used to verify your university affiliation"
+              />
+              <small className="muted">
+                We'll verify your university affiliation automatically — this takes a moment.
+              </small>
+            </label>
+          )}
 
           <label className="field">
             <span>Which event brought you here? (optional)</span>

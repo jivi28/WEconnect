@@ -34,14 +34,41 @@ export function AuthProvider({ children }) {
   }, [])
 
   async function loadProfile(userId) {
-    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single()
+    // Excludes `email`: the DB only grants that column to the row owner /
+    // wurth_employee accounts via get_profile_email() (see
+    // supabase/schema.sql), not through a blanket select. The signed-in
+    // user's own email comes from the auth session (`user.email`) instead.
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, name, role, role_data, source_event_id, onboarding_completed, verification_status, cv_file_path, created_at')
+      .eq('id', userId)
+      .single()
     setProfile(data || null)
     setLoading(false)
   }
 
-  // name, email, password, role ('student' | 'educator' | 'admin'), roleData (role-specific fields)
-  async function signup({ name, email, password, role, roleData, sourceEventId }) {
-    const { data, error } = await supabase.auth.signUp({ email, password })
+  // name, email, password, role ('student' | 'educator' | 'wurth_employee'), roleData (role-specific fields)
+  // verificationStatus: 'verified' | 'pending' — decided by Signup.jsx's mock
+  // university-affiliation check before this is called (see UNIVERSITY_EMAIL_ALLOWLIST).
+  async function signup({ name, email, password, role, roleData, sourceEventId, verificationStatus }) {
+    // Metadata goes through options.data, not a follow-up client insert: the
+    // `profiles` row is created server-side by the on_auth_user_created
+    // trigger (see supabase/schema.sql) so it doesn't depend on a session
+    // existing yet — signUp() returns no session when email confirmation is
+    // required, and an insert without one would be rejected by RLS.
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          name,
+          role,
+          role_data: roleData || {},
+          source_event_id: sourceEventId || null,
+          verification_status: verificationStatus || 'pending'
+        }
+      }
+    })
     if (error) throw error
 
     const user = data.user
@@ -53,11 +80,9 @@ export function AuthProvider({ children }) {
       email,
       role,
       role_data: roleData || {},
-      source_event_id: sourceEventId || null
+      source_event_id: sourceEventId || null,
+      verification_status: verificationStatus || 'pending'
     }
-    const { error: profileError } = await supabase.from('profiles').insert(row)
-    if (profileError) throw profileError
-
     setProfile(row)
 
     // If email confirmation is required, there will be no session yet.

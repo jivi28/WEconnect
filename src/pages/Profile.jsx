@@ -1,7 +1,14 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
-import RoleFields from '../components/RoleFields'
+import RoleFields, { ROLE_FIELD_DEFS } from '../components/RoleFields'
+
+const LEGACY_STUDENT_YEAR_KEYS = ['year', 'studyYear', 'yearOfStudy', 'academicYear']
+
+function cleanRoleData(role, data) {
+  if (role !== 'student') return data || {}
+  return Object.fromEntries(Object.entries(data || {}).filter(([key]) => !LEGACY_STUDENT_YEAR_KEYS.includes(key)))
+}
 
 function initials(name) {
   return (name || '')
@@ -17,19 +24,25 @@ function formatDate(value) {
   return new Date(value).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
+const MAX_CV_BYTES = 5 * 1024 * 1024
+
 export default function Profile({ onNavigate }) {
   const { profile, updateProfile, user } = useAuth()
   const [editing, setEditing] = useState(false)
-  const [roleData, setRoleData] = useState(profile.role_data || {})
+  const [roleData, setRoleData] = useState(() => cleanRoleData(profile.role, profile.role_data))
   const [saving, setSaving] = useState(false)
 
-  const isAdmin = profile.role === 'admin'
+  const isWurthEmployee = profile.role === 'wurth_employee'
+  const roleFieldDefs = ROLE_FIELD_DEFS[profile.role] || []
+  const cleanedProfileRoleData = cleanRoleData(profile.role, profile.role_data)
 
   const [networkProfile, setNetworkProfile] = useState(null)
   const [sourceEvent, setSourceEvent] = useState(null)
   const [eventCount, setEventCount] = useState(0)
   const [projectCount, setProjectCount] = useState(0)
   const [loadingExtras, setLoadingExtras] = useState(true)
+  const [cvUploading, setCvUploading] = useState(false)
+  const [cvError, setCvError] = useState('')
 
   useEffect(() => {
     loadExtras()
@@ -40,7 +53,7 @@ export default function Profile({ onNavigate }) {
     const [{ data: net }, { data: events }, { data: members }, sourceEventResult] = await Promise.all([
       supabase.from('network_profiles').select('*').eq('user_id', user.id).maybeSingle(),
       supabase.from('user_events').select('event_id').eq('user_id', user.id),
-      isAdmin
+      isWurthEmployee
         ? Promise.resolve({ data: [] })
         : supabase.from('project_members').select('project_id').eq('user_id', user.id),
       profile.source_event_id
@@ -61,14 +74,56 @@ export default function Profile({ onNavigate }) {
   async function handleSave() {
     setSaving(true)
     try {
-      await updateProfile({ role_data: roleData })
+      await updateProfile({ role_data: cleanRoleData(profile.role, roleData) })
       setEditing(false)
     } finally {
       setSaving(false)
     }
   }
 
-  const opportunityTags = isAdmin
+  // Fixed per-user path (not the original filename) so re-uploading
+  // overwrites in place rather than accumulating old CVs in the bucket.
+  async function handleCvUpload(e) {
+    const file = e.target.files?.[0]
+    e.target.value = ''
+    if (!file) return
+    setCvError('')
+    if (file.type !== 'application/pdf') {
+      setCvError('CV must be a PDF.')
+      return
+    }
+    if (file.size > MAX_CV_BYTES) {
+      setCvError('CV must be 5MB or smaller.')
+      return
+    }
+    setCvUploading(true)
+    try {
+      const path = `${user.id}/cv.pdf`
+      const { error: uploadError } = await supabase.storage
+        .from('cvs')
+        .upload(path, file, { upsert: true, contentType: 'application/pdf' })
+      if (uploadError) throw uploadError
+      await updateProfile({ cv_file_path: path })
+    } catch (err) {
+      setCvError(err.message || 'Upload failed. Please try again.')
+    } finally {
+      setCvUploading(false)
+    }
+  }
+
+  // Bucket is private (see supabase/schema.sql) — every view goes through a
+  // freshly minted signed URL rather than a stored public link.
+  async function handleViewCv() {
+    setCvError('')
+    const { data, error } = await supabase.storage.from('cvs').createSignedUrl(profile.cv_file_path, 60)
+    if (error || !data?.signedUrl) {
+      setCvError('Could not open your CV. Please try again.')
+      return
+    }
+    window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
+  }
+
+  const opportunityTags = isWurthEmployee
     ? [...(networkProfile?.looking_for || []), ...(networkProfile?.sought_educators || []), ...(networkProfile?.offers || [])]
     : profile.role === 'educator'
       ? networkProfile?.offers || []
@@ -84,7 +139,7 @@ export default function Profile({ onNavigate }) {
           <p className="eyebrow">Profile</p>
           <h2>{profile.name}</h2>
           <p className="subtitle">
-            {profile.email} · <span className="role-tag">{profile.role}</span>
+            {user.email} · <span className="role-tag">{profile.role}</span>
           </p>
           <p className="muted">
             Member since {formatDate(profile.created_at) || '—'}
@@ -117,26 +172,53 @@ export default function Profile({ onNavigate }) {
           </>
         ) : (
           <dl className="detail-list">
-            {Object.entries(profile.role_data || {}).length === 0 && (
+            {roleFieldDefs.every(({ key }) => !cleanedProfileRoleData[key]) && (
               <p className="muted">No details added yet.</p>
             )}
-            {Object.entries(profile.role_data || {}).map(([key, value]) => (
-              <div key={key} className="detail-row">
-                <dt>{key}</dt>
-                <dd>
-                  {key === 'linkedinUrl' && value ? (
-                    <a href={value} target="_blank" rel="noreferrer">
-                      {value}
-                    </a>
-                  ) : (
-                    value || '—'
-                  )}
-                </dd>
-              </div>
-            ))}
+            {roleFieldDefs.map(({ key, label }) => {
+              const value = cleanedProfileRoleData[key]
+              return (
+                <div key={key} className="detail-row">
+                  <dt>{label}</dt>
+                  <dd>
+                    {key === 'linkedinUrl' && value ? (
+                      <a href={value} target="_blank" rel="noreferrer">
+                        {value}
+                      </a>
+                    ) : (
+                      value || '—'
+                    )}
+                  </dd>
+                </div>
+              )
+            })}
           </dl>
         )}
       </div>
+
+      {profile.role === 'student' && (
+        <div className="card">
+          <div className="card-header">
+            <h3>CV</h3>
+          </div>
+          <p className="muted">
+            Only visible to you and Würth Elektronik recruiters — not educators or other students.
+          </p>
+          {profile.cv_file_path && (
+            <div className="card-actions">
+              <button type="button" className="link-btn" onClick={handleViewCv}>
+                View current CV
+              </button>
+            </div>
+          )}
+          <label className="field">
+            <span>{profile.cv_file_path ? 'Replace CV (PDF, max 5MB)' : 'Upload CV (PDF, max 5MB)'}</span>
+            <input type="file" accept="application/pdf" onChange={handleCvUpload} disabled={cvUploading} />
+          </label>
+          {cvUploading && <p className="muted">Uploading…</p>}
+          {cvError && <p className="error">{cvError}</p>}
+        </div>
+      )}
 
       <div className="card">
         <div className="card-header">
@@ -186,7 +268,7 @@ export default function Profile({ onNavigate }) {
             <dt>Events attended</dt>
             <dd>{eventCount}</dd>
           </div>
-          {!isAdmin && (
+          {!isWurthEmployee && (
             <div className="detail-row">
               <dt>Projects joined</dt>
               <dd>{projectCount}</dd>

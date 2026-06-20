@@ -15,7 +15,7 @@ export default function Hero({ activeChip, onChipChange }: HeroProps) {
           </h1>
           <p className="mt-1.5 max-w-xl text-sm text-graydark">
             Discover students, educators, and WU Elektronik experts connected through shared
-            interests, projects, and events.
+            interests, expertise, and opportunities.
           </p>
         </div>
         <FilterChips active={activeChip} onChange={onChipChange} />
