@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import { supabase } from '../supabaseClient'
 import RoleFields from '../components/RoleFields'
 import { readableAuthError } from './Login'
 
@@ -19,6 +20,15 @@ export default function Signup({ onSwitchToLogin }) {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [confirmNotice, setConfirmNotice] = useState(false)
+  const [events, setEvents] = useState([])
+  const [sourceEventId, setSourceEventId] = useState('')
+
+  useEffect(() => {
+    supabase
+      .from('events')
+      .select('*')
+      .then(({ data }) => setEvents(data || []))
+  }, [])
 
   function setRoleField(key, value) {
     setRoleData((prev) => ({ ...prev, [key]: value }))
@@ -29,7 +39,16 @@ export default function Signup({ onSwitchToLogin }) {
     setError('')
     setBusy(true)
     try {
-      const { needsEmailConfirmation } = await signup({ name, email, password, role, roleData })
+      const finalRoleData =
+        role === 'admin' ? { ...roleData, organization: 'Würth Elektronik' } : roleData
+      const { needsEmailConfirmation } = await signup({
+        name,
+        email,
+        password,
+        role,
+        roleData: finalRoleData,
+        sourceEventId
+      })
       if (needsEmailConfirmation) setConfirmNotice(true)
     } catch (err) {
       setError(readableAuthError(err))
@@ -106,6 +125,18 @@ export default function Signup({ onSwitchToLogin }) {
           </div>
 
           <RoleFields role={role} values={roleData} onChange={setRoleField} />
+
+          <label className="field">
+            <span>Which event brought you here? (optional)</span>
+            <select value={sourceEventId} onChange={(e) => setSourceEventId(e.target.value)}>
+              <option value="">Not sure / none</option>
+              {events.map((event) => (
+                <option key={event.id} value={event.id}>
+                  {event.name}
+                </option>
+              ))}
+            </select>
+          </label>
 
           {error && <p className="error">{error}</p>}
 

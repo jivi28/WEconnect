@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import Profile from './Profile'
 import Network from './Network'
+import ConnectionsMap from './ConnectionsMap'
 
 const TABS = [
   { id: 'profile', label: 'Profile' },
@@ -13,6 +14,8 @@ const TABS = [
 export default function Home() {
   const { profile, logout } = useAuth()
   const [tab, setTab] = useState('profile')
+  const tabs =
+    profile.role === 'admin' ? [...TABS, { id: 'connections-map', label: 'Connections Map' }] : TABS
 
   return (
     <div className="shell">
@@ -28,7 +31,7 @@ export default function Home() {
         </div>
 
         <nav className="rail-nav">
-          {TABS.map((t) => (
+          {tabs.map((t) => (
             <button
               key={t.id}
               className={`rail-link ${tab === t.id ? 'rail-link-active' : ''}`}
@@ -52,6 +55,7 @@ export default function Home() {
       <main className="main">
         {tab === 'profile' && <Profile />}
         {tab === 'network' && <Network />}
+        {tab === 'connections-map' && <ConnectionsMap />}
         {tab === 'analysis' && <Placeholder name="Analysis" />}
         {tab === 'simulation' && <Placeholder name="Simulation" />}
       </main>

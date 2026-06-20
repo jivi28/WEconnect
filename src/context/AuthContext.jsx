@@ -40,7 +40,7 @@ export function AuthProvider({ children }) {
   }
 
   // name, email, password, role ('student' | 'educator' | 'admin'), roleData (role-specific fields)
-  async function signup({ name, email, password, role, roleData }) {
+  async function signup({ name, email, password, role, roleData, sourceEventId }) {
     const { data, error } = await supabase.auth.signUp({ email, password })
     if (error) throw error
 
@@ -52,7 +52,8 @@ export function AuthProvider({ children }) {
       name,
       email,
       role,
-      role_data: roleData || {}
+      role_data: roleData || {},
+      source_event_id: sourceEventId || null
     }
     const { error: profileError } = await supabase.from('profiles').insert(row)
     if (profileError) throw profileError
