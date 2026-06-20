@@ -51,7 +51,7 @@ export default function MapFilters({ from, to, setFrom, setTo }: Props) {
             <Plus className="h-3 w-3" /> Filter
           </button>
         </PopoverTrigger>
-        <PopoverContent align="start" className="w-56 p-3 space-y-2">
+        <PopoverContent align="start" collisionPadding={12} className="w-56 max-w-[calc(100vw-2rem)] p-3 space-y-2">
           <div>
             <label className="block text-[10px] font-semibold text-[#1d252d]/60 mb-1">After</label>
             <input
