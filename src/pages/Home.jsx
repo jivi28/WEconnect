@@ -24,7 +24,7 @@ export default function Home() {
   const tabs = [
     ...BASE_TABS,
     ...(isWurthEmployee ? [] : [{ id: 'projects', label: 'Projects' }]),
-    ...(isWurthEmployee ? [{ id: 'analysis', label: 'Analysis', placeholder: true }] : [])
+    ...(isWurthEmployee ? [{ id: 'analysis', label: 'Analysis' }] : [])
   ]
 
   return (
@@ -65,9 +65,29 @@ export default function Home() {
         {tab === 'network' && <Network />}
         {tab === 'events' && <EventsTab />}
         {tab === 'projects' && !isWurthEmployee && <ProjectsTab />}
-        {tab === 'analysis' && <Placeholder name="Analysis" />}
+        {tab === 'analysis' && isWurthEmployee && <AnalysisTab />}
       </main>
     </div>
+  )
+}
+
+// The Event ROI dashboard is a standalone Next.js app (analysis-dashboard/,
+// vendored from origin/analysis) — embedded by URL rather than ported into
+// this Vite app, since it depends on Next's App Router/server routes and a
+// separate React 19 + Tailwind v4 toolchain.
+function AnalysisTab() {
+  return (
+    <iframe
+      src="http://localhost:3000"
+      title="WEconnect Event ROI Analysis"
+      style={{
+        width: '100%',
+        height: 'calc(100vh - 160px)',
+        border: 'none',
+        borderRadius: '12px',
+        background: 'white'
+      }}
+    />
   )
 }
 
@@ -78,16 +98,4 @@ function initials(name) {
     .slice(0, 2)
     .map((p) => p[0].toUpperCase())
     .join('')
-}
-
-function Placeholder({ name }) {
-  return (
-    <div className="placeholder">
-      <p className="eyebrow">{name} module</p>
-      <h2>This part is being built by a teammate.</h2>
-      <p className="subtitle">
-        Once their branch merges, swap this component out in <code>Home.jsx</code> for theirs.
-      </p>
-    </div>
-  )
 }
