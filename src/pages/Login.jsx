@@ -82,6 +82,13 @@ export function readableAuthError(err) {
     return 'No account matches that email and password.'
   }
   if (message.includes('already registered')) return 'An account already exists for that email.'
+  if (message.includes('profiles_username_unique')) return 'That username is taken — try another one.'
+  if (
+    message.includes('profiles_username_not_blank') ||
+    (message.includes('null value') && message.includes('username'))
+  ) {
+    return 'A username is required — please choose one.'
+  }
   if (message.includes('Password should be at least')) return 'Password should be at least 6 characters.'
   if (message.includes('Email not confirmed')) {
     return 'Please confirm your email (check your inbox) before logging in.'

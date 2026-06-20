@@ -764,6 +764,163 @@ textarea {
   background: var(--accent-soft);
 }
 
+/* ---------- Profile highlights ---------- */
+
+.profile-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+.profile-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-aside {
+  flex: 0 0 320px;
+  display: flex;
+  flex-direction: column;
+}
+
+.profile-aside .card:first-child {
+  margin-top: 0;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot-upcoming {
+  background: var(--accent);
+}
+
+.status-dot-past {
+  background: var(--teal);
+}
+
+.sidebar-event-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.sidebar-event-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: var(--we-gray-50);
+  border-radius: 8px;
+  padding: 0.55rem 0.8rem;
+}
+
+.sidebar-event-name {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.sidebar-event-date {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+.project-reel-thumb {
+  height: 120px;
+  border-radius: 10px;
+  margin-top: 0.75rem;
+  background-image: linear-gradient(160deg, var(--we-ink) 0%, var(--we-red-dark) 120%);
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.8rem;
+}
+
+.project-reel-name {
+  margin: 0.75rem 0 0.35rem;
+  font-weight: 700;
+}
+
+/* ---------- Events page ---------- */
+
+.events-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+.events-sidebar {
+  flex: 0 0 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.events-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.sidebar-section .eyebrow {
+  margin-bottom: 0.25rem;
+}
+
+.tile-card-signup {
+  position: absolute;
+  bottom: 0.75rem;
+  right: 0.75rem;
+  background: var(--surface);
+  color: var(--we-ink);
+  border: none;
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tile-card-signup:hover:not(:disabled) {
+  background: var(--we-red);
+  color: var(--surface);
+}
+
+.tile-card-signup:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+
+.tile-card-signup-static {
+  cursor: default;
+  background: var(--teal-soft);
+  color: var(--teal);
+}
+
+/* ---------- Projects page ---------- */
+
+.section-heading {
+  margin-top: 1.75rem;
+}
+
+.match-thumb {
+  width: 60px;
+  height: 60px;
+  border-radius: 10px;
+  background-image: linear-gradient(160deg, var(--we-ink) 0%, var(--we-red-dark) 120%);
+  background-size: cover;
+  background-position: center;
+}
+
 /* ---------- Responsive ---------- */
 
 @media (max-width: 760px) {
@@ -785,6 +942,15 @@ textarea {
   .match-card {
     grid-template-columns: 1fr;
     text-align: left;
+  }
+  .profile-layout,
+  .events-layout {
+    flex-direction: column;
+  }
+  .profile-aside,
+  .events-sidebar {
+    flex: 1 1 auto;
+    width: 100%;
   }
 }
 

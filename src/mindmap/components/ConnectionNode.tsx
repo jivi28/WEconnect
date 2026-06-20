@@ -1,13 +1,14 @@
 import Avatar from './Avatar'
 import RoleIcon from './RoleIcon'
 import type { Person } from '../types'
-import { strengthTier } from '../layout'
+import { scoreToColor, strengthTier } from '../layout'
 
 interface ConnectionNodeProps {
   person: Person
   x: number
   y: number
   index: number
+  nodeCount: number
   isHovered: boolean
   isSelected: boolean
   dimmed: boolean
@@ -24,6 +25,7 @@ export default function ConnectionNode({
   x,
   y,
   index,
+  nodeCount,
   isHovered,
   isSelected,
   dimmed,
@@ -33,16 +35,19 @@ export default function ConnectionNode({
   onClick
 }: ConnectionNodeProps) {
   const tier = strengthTier(person.connectionStrength)
-  const size = SIZE_BY_TIER[tier]
+  const density = Math.min(1, Math.max(0, (nodeCount - 10) / 20))
+  const nodeScale = 1 - density * 0.32
+  const size = Math.round(SIZE_BY_TIER[tier] * nodeScale)
+  const labelWidth = Math.round(110 - density * 34)
+  const labelFontSize = 11 - density * 1.5
   const isExpert = person.role === 'expert'
   const isEducator = person.role === 'educator'
   const active = isHovered || isSelected
+  const ringColor = scoreToColor(person.connectionStrength)
 
-  const ringClass = isExpert
-    ? 'ring-[4px] ring-brand-red'
-    : isEducator
-      ? 'ring-[3px] ring-brand-red/70'
-      : 'ring-2 ring-graylight'
+  // Ring width still hints at role (experts/educators stand out a touch
+  // more), but the color itself is driven entirely by connection strength.
+  const ringWidthClass = isExpert ? 'ring-[4px]' : isEducator ? 'ring-[3px]' : 'ring-2'
 
   return (
     <foreignObject
@@ -63,10 +68,10 @@ export default function ConnectionNode({
         onClick={onClick}
       >
         <div
-          className={`relative flex cursor-pointer items-center justify-center rounded-full bg-white p-1 transition-all duration-200 ${ringClass} ${
+          className={`relative flex cursor-pointer items-center justify-center rounded-full bg-white p-1 transition-all duration-200 ${ringWidthClass} ${
             active ? 'scale-110 shadow-nodeStrong' : 'shadow-node'
           } ${dimmed ? 'opacity-30' : 'opacity-100'}`}
-          style={{ width: size, height: size }}
+          style={{ width: size, height: size, '--tw-ring-color': ringColor } as React.CSSProperties}
         >
           <Avatar
             name={person.name}
@@ -87,11 +92,14 @@ export default function ConnectionNode({
           </span>
         </div>
         <div
-          className={`mt-1.5 max-w-[110px] rounded-md px-1.5 py-0.5 text-center transition-opacity ${
+          className={`mt-1.5 rounded-md px-1.5 py-0.5 text-center transition-opacity ${
             dimmed ? 'opacity-40' : 'opacity-100'
           }`}
+          style={{ maxWidth: labelWidth }}
         >
-          <p className="truncate text-[11px] font-semibold leading-tight text-ink">{person.name}</p>
+          <p className="truncate font-semibold leading-tight text-ink" style={{ fontSize: labelFontSize }}>
+            {person.name}
+          </p>
         </div>
       </div>
     </foreignObject>

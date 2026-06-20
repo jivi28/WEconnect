@@ -25,6 +25,7 @@ function passesMockAffiliationCheck(email) {
 export default function Signup({ onSwitchToLogin }) {
   const { signup } = useAuth()
   const [name, setName] = useState('')
+  const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [role, setRole] = useState('student')
@@ -65,6 +66,7 @@ export default function Signup({ onSwitchToLogin }) {
         : 'verified'
       const { needsEmailConfirmation } = await signup({
         name,
+        username: username.trim(),
         email,
         password,
         role,
@@ -111,6 +113,19 @@ export default function Signup({ onSwitchToLogin }) {
           <label className="field">
             <span>Name</span>
             <input type="text" required value={name} onChange={(e) => setName(e.target.value)} />
+          </label>
+          <label className="field">
+            <span>Username</span>
+            <input
+              type="text"
+              required
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="e.g. circuit_otter42"
+            />
+            <small className="muted">
+              Don't use your real name — this is the handle that shows up on the leaderboard.
+            </small>
           </label>
           <label className="field">
             <span>Email</span>

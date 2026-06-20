@@ -7,7 +7,8 @@ import ProjectsTab from './ProjectsTab'
 
 const BASE_TABS = [
   { id: 'profile', label: 'Profile' },
-  { id: 'network', label: 'Network' }
+  { id: 'network', label: 'Network' },
+  { id: 'events', label: 'Events' }
 ]
 
 export default function Home() {

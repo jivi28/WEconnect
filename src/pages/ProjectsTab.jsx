@@ -69,10 +69,59 @@ export default function ProjectsTab() {
     if (!error) await loadProjects()
   }
 
+  async function handleToggleStatus(project) {
+    const nextStatus = project.status === 'past' ? 'ongoing' : 'past'
+    const { error } = await supabase.from('projects').update({ status: nextStatus }).eq('id', project.id)
+    if (!error) await loadProjects()
+  }
+
   if (loading) return <div className="panel">Loading projects…</div>
 
   const joinedProjectIds = new Set(myProjects.map((p) => p.project_id))
   const activeProject = projects.find((p) => p.id === activeProjectId) || null
+  const ongoingProjects = projects.filter((p) => p.status !== 'past')
+  const pastProjects = projects.filter((p) => p.status === 'past')
+
+  function renderProjectList(list) {
+    return (
+      <ul className="match-list">
+        {list.map((project) => {
+          const isOwner = project.owner_id === user.id
+          const isMember = joinedProjectIds.has(project.id)
+          return (
+            <li key={project.id} className="match-card">
+              <div
+                className="match-thumb"
+                style={project.thumbnail_url ? { backgroundImage: `url(${project.thumbnail_url})` } : undefined}
+              />
+              <div className="match-body">
+                <p className="match-name">
+                  <button type="button" className="link-btn" onClick={() => setActiveProjectId(project.id)}>
+                    {project.name}
+                  </button>{' '}
+                  <span className="role-tag">{project.visibility}</span>
+                </p>
+                {project.description && <p className="muted">{project.description}</p>}
+              </div>
+              <div className="match-action">
+                {isOwner && (
+                  <>
+                    <button className="btn-secondary" onClick={() => handleToggleVisibility(project)}>
+                      Make {project.visibility === 'public' ? 'private' : 'public'}
+                    </button>
+                    <button className="btn-secondary" onClick={() => handleToggleStatus(project)}>
+                      {project.status === 'past' ? 'Reopen' : 'Mark completed'}
+                    </button>
+                  </>
+                )}
+                {!isOwner && isMember && <span className="muted">Joined</span>}
+              </div>
+            </li>
+          )
+        })}
+      </ul>
+    )
+  }
 
   return (
     <div className="panel">
@@ -107,33 +156,21 @@ export default function ProjectsTab() {
       {projects.length === 0 ? (
         <p className="muted">No projects exist yet — check back once the simulation module adds some</p>
       ) : (
-        <ul className="match-list">
-          {projects.map((project) => {
-            const isOwner = project.owner_id === user.id
-            const isMember = joinedProjectIds.has(project.id)
-            return (
-              <li key={project.id} className="match-card">
-                <div className="match-body">
-                  <p className="match-name">
-                    <button type="button" className="link-btn" onClick={() => setActiveProjectId(project.id)}>
-                      {project.name}
-                    </button>{' '}
-                    <span className="role-tag">{project.visibility}</span>
-                  </p>
-                  {project.description && <p className="muted">{project.description}</p>}
-                </div>
-                <div className="match-action">
-                  {isOwner && (
-                    <button className="btn-secondary" onClick={() => handleToggleVisibility(project)}>
-                      Make {project.visibility === 'public' ? 'private' : 'public'}
-                    </button>
-                  )}
-                  {!isOwner && isMember && <span className="muted">Joined</span>}
-                </div>
-              </li>
-            )
-          })}
-        </ul>
+        <>
+          <h3 className="section-heading">Ongoing projects</h3>
+          {ongoingProjects.length === 0 ? (
+            <p className="muted">No ongoing projects right now.</p>
+          ) : (
+            renderProjectList(ongoingProjects)
+          )}
+
+          <h3 className="section-heading">Past projects</h3>
+          {pastProjects.length === 0 ? (
+            <p className="muted">No completed projects yet.</p>
+          ) : (
+            renderProjectList(pastProjects)
+          )}
+        </>
       )}
 
       <div className="card">

@@ -26,12 +26,17 @@ function hashToUnit(id: string): number {
   return (Math.abs(h) % 1000) / 1000
 }
 
-export function distanceForScore(score: number, visibleMin = 0, visibleMax = 100): number {
+export function distanceForScore(
+  score: number,
+  visibleMin = 0,
+  visibleMax = 100,
+  minimumRadius = MIN_RADIUS
+): number {
   const span = visibleMax - visibleMin
-  if (span <= 0) return (MIN_RADIUS + MAX_RADIUS) / 2
+  if (span <= 0) return (minimumRadius + MAX_RADIUS) / 2
   const normalized = Math.min(1, Math.max(0, (score - visibleMin) / span))
   const closeness = Math.pow(normalized, SCORE_CURVE)
-  return MAX_RADIUS - closeness * (MAX_RADIUS - MIN_RADIUS)
+  return MAX_RADIUS - closeness * (MAX_RADIUS - minimumRadius)
 }
 
 export function computeLayout(
@@ -46,6 +51,12 @@ export function computeLayout(
   filtered.forEach((p) => byRole[p.role].push(p))
 
   const total = filtered.length
+  // Ten large nodes are comfortable at the normal inner radius. As the map
+  // approaches 30 nodes, expand that inner ring and reduce random angular
+  // movement so adjacent nodes have substantially more room.
+  const density = Math.min(1, Math.max(0, (total - 10) / 20))
+  const adaptiveMinRadius = MIN_RADIUS + density * 75
+  const adaptiveAngleJitter = ANGLE_JITTER * (1 - density * 0.5)
   const strengths = filtered.map((person) => person.connectionStrength)
   const visibleMin = Math.min(...strengths)
   const visibleMax = Math.max(...strengths)
@@ -62,9 +73,9 @@ export function computeLayout(
 
     group.forEach((person, i) => {
       const baseAngle = angleCursor + (arc * (i + 0.5)) / group.length
-      const angleOffset = (hashToUnit(person.id) - 0.5) * 2 * ANGLE_JITTER
+      const angleOffset = (hashToUnit(person.id) - 0.5) * 2 * adaptiveAngleJitter
       const angle = baseAngle + angleOffset
-      const radius = distanceForScore(person.connectionStrength, visibleMin, visibleMax)
+      const radius = distanceForScore(person.connectionStrength, visibleMin, visibleMax, adaptiveMinRadius)
       positions.set(person.id, {
         x: centerX + radius * Math.cos(angle),
         y: centerY + radius * Math.sin(angle),
@@ -82,4 +93,16 @@ export function strengthTier(strength: number): 'strong' | 'medium' | 'weak' {
   if (strength >= 75) return 'strong'
   if (strength >= 45) return 'medium'
   return 'weak'
+}
+
+// Connection strength color: pale pink at 0, deep brand red at 100. Used for
+// both spokes and node rings so shade alone communicates match quality
+// instead of every connection looking the same saturated red.
+const PALE_PINK = [253, 226, 226]
+const DEEP_RED = [122, 0, 0]
+
+export function scoreToColor(score: number): string {
+  const t = Math.min(1, Math.max(0, score / 100))
+  const [r, g, b] = PALE_PINK.map((channel, i) => Math.round(channel + (DEEP_RED[i] - channel) * t))
+  return `rgb(${r}, ${g}, ${b})`
 }

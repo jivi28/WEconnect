@@ -2,7 +2,7 @@ import type { CurrentUser, Person } from '../types'
 
 export const currentUser: CurrentUser = {
   name: 'Anushree Goyal',
-  role: 'Student',
+  role: 'student',
   email: 'anushree.goyal@example.com',
   imageUrl: 'https://i.pravatar.cc/300?img=47',
   mainInterests: 'Electronics, AI, Embedded Systems, Innovation Projects'

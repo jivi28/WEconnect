@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
 import RoleFields, { ROLE_FIELD_DEFS } from '../components/RoleFields'
+import { formatEventDate, isPastEvent, splitJoinedEvents } from '../lib/events'
 
 const LEGACY_STUDENT_YEAR_KEYS = ['year', 'studyYear', 'yearOfStudy', 'academicYear']
 
@@ -32,13 +33,19 @@ export default function Profile({ onNavigate }) {
   const [roleData, setRoleData] = useState(() => cleanRoleData(profile.role, profile.role_data))
   const [saving, setSaving] = useState(false)
 
+  const [editingUsername, setEditingUsername] = useState(false)
+  const [usernameDraft, setUsernameDraft] = useState(profile.username || '')
+  const [savingUsername, setSavingUsername] = useState(false)
+  const [usernameError, setUsernameError] = useState('')
+
   const isWurthEmployee = profile.role === 'wurth_employee'
   const roleFieldDefs = ROLE_FIELD_DEFS[profile.role] || []
   const cleanedProfileRoleData = cleanRoleData(profile.role, profile.role_data)
 
   const [networkProfile, setNetworkProfile] = useState(null)
   const [sourceEvent, setSourceEvent] = useState(null)
-  const [eventCount, setEventCount] = useState(0)
+  const [myEvents, setMyEvents] = useState([])
+  const [recentProject, setRecentProject] = useState(null)
   const [projectCount, setProjectCount] = useState(0)
   const [loadingExtras, setLoadingExtras] = useState(true)
   const [cvUploading, setCvUploading] = useState(false)
@@ -50,25 +57,57 @@ export default function Profile({ onNavigate }) {
 
   async function loadExtras() {
     setLoadingExtras(true)
-    const [{ data: net }, { data: events }, { data: members }, sourceEventResult] = await Promise.all([
-      supabase.from('network_profiles').select('*').eq('user_id', user.id).maybeSingle(),
-      supabase.from('user_events').select('event_id').eq('user_id', user.id),
-      isWurthEmployee
-        ? Promise.resolve({ data: [] })
-        : supabase.from('project_members').select('project_id').eq('user_id', user.id),
-      profile.source_event_id
-        ? supabase.from('events').select('name, event_date').eq('id', profile.source_event_id).maybeSingle()
-        : Promise.resolve({ data: null })
-    ])
+    const [{ data: net }, { data: events }, { data: members }, { data: owned }, sourceEventResult] =
+      await Promise.all([
+        supabase.from('network_profiles').select('*').eq('user_id', user.id).maybeSingle(),
+        supabase.from('user_events').select('event_id, events(*)').eq('user_id', user.id),
+        isWurthEmployee
+          ? Promise.resolve({ data: [] })
+          : supabase.from('project_members').select('project_id, created_at, projects(*)').eq('user_id', user.id),
+        isWurthEmployee
+          ? Promise.resolve({ data: [] })
+          : supabase.from('projects').select('*').eq('owner_id', user.id),
+        profile.source_event_id
+          ? supabase.from('events').select('name, event_date').eq('id', profile.source_event_id).maybeSingle()
+          : Promise.resolve({ data: null })
+      ])
     setNetworkProfile(net || null)
-    setEventCount((events || []).length)
-    setProjectCount((members || []).length)
+    setMyEvents(events || [])
+
+    const candidates = [...(members || []).map((m) => m.projects).filter(Boolean), ...(owned || [])]
+    const deduped = [...new Map(candidates.map((p) => [p.id, p])).values()]
+    deduped.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
+    setRecentProject(deduped[0] || null)
+    setProjectCount(deduped.length)
+
     setSourceEvent(sourceEventResult.data || null)
     setLoadingExtras(false)
   }
 
   function setRoleField(key, value) {
     setRoleData((prev) => ({ ...prev, [key]: value }))
+  }
+
+  async function handleSaveUsername() {
+    const trimmed = usernameDraft.trim()
+    if (!trimmed) {
+      setUsernameError('Username cannot be empty.')
+      return
+    }
+    setUsernameError('')
+    setSavingUsername(true)
+    try {
+      await updateProfile({ username: trimmed })
+      setEditingUsername(false)
+    } catch (err) {
+      setUsernameError(
+        err.message?.includes('profiles_username_unique')
+          ? 'That username is taken — try another.'
+          : 'Could not save username. Please try again.'
+      )
+    } finally {
+      setSavingUsername(false)
+    }
   }
 
   async function handleSave() {
@@ -129,8 +168,12 @@ export default function Profile({ onNavigate }) {
       ? networkProfile?.offers || []
       : networkProfile?.looking_for || []
 
+  const { attended } = splitJoinedEvents(myEvents)
+  const highlightEvents = attended.slice(0, 5)
+
   return (
-    <div className="panel">
+    <div className="profile-layout">
+      <div className="panel profile-main">
       <div className="profile-header">
         <div className="avatar avatar-lg" aria-hidden="true">
           {initials(profile.name)}
@@ -141,6 +184,40 @@ export default function Profile({ onNavigate }) {
           <p className="subtitle">
             {user.email} · <span className="role-tag">{profile.role}</span>
           </p>
+
+          {editingUsername ? (
+            <div className="card-actions" style={{ marginTop: 0 }}>
+              <input
+                type="text"
+                value={usernameDraft}
+                onChange={(e) => setUsernameDraft(e.target.value)}
+                placeholder="Leaderboard username"
+                autoFocus
+              />
+              <button className="link-btn" onClick={handleSaveUsername} disabled={savingUsername}>
+                {savingUsername ? 'Saving…' : 'Save'}
+              </button>
+              <button
+                className="link-btn"
+                onClick={() => {
+                  setEditingUsername(false)
+                  setUsernameDraft(profile.username || '')
+                  setUsernameError('')
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <p className="muted">
+              {profile.username ? `@${profile.username}` : 'No leaderboard username set yet'}{' · '}
+              <button className="link-btn" onClick={() => setEditingUsername(true)}>
+                {profile.username ? 'Change' : 'Set username'}
+              </button>
+            </p>
+          )}
+          {usernameError && <p className="error">{usernameError}</p>}
+
           <p className="muted">
             Member since {formatDate(profile.created_at) || '—'}
             {sourceEvent && ` · joined via ${sourceEvent.name}`}
@@ -266,7 +343,7 @@ export default function Profile({ onNavigate }) {
         <dl className="detail-list">
           <div className="detail-row">
             <dt>Events attended</dt>
-            <dd>{eventCount}</dd>
+            <dd>{attended.length}</dd>
           </div>
           {!isWurthEmployee && (
             <div className="detail-row">
@@ -276,6 +353,67 @@ export default function Profile({ onNavigate }) {
           )}
         </dl>
       </div>
+    </div>
+
+    <aside className="profile-aside">
+      <div className="card highlight-card">
+        <div className="card-header">
+          <h3>Recently attended</h3>
+          <button className="link-btn" onClick={() => onNavigate?.('events')}>
+            See all
+          </button>
+        </div>
+        {loadingExtras ? (
+          <p className="muted">Loading…</p>
+        ) : highlightEvents.length === 0 ? (
+          <p className="muted">You haven't attended any events yet.</p>
+        ) : (
+          <ul className="sidebar-event-list">
+            {highlightEvents.map((ev) => {
+              const past = isPastEvent(ev.event_date)
+              return (
+                <li key={ev.id} className="sidebar-event-row">
+                  <div>
+                    <p className="sidebar-event-name">{ev.name}</p>
+                    <p className="sidebar-event-date">{formatEventDate(ev.event_date)}</p>
+                  </div>
+                  <span className={`status-dot ${past ? 'status-dot-past' : 'status-dot-upcoming'}`} aria-hidden="true" />
+                </li>
+              )
+            })}
+          </ul>
+        )}
+      </div>
+
+      {!isWurthEmployee && (
+        <div className="card highlight-card">
+          <div className="card-header">
+            <h3>Project highlight</h3>
+            <button className="link-btn" onClick={() => onNavigate?.('projects')}>
+              See all
+            </button>
+          </div>
+          {loadingExtras ? (
+            <p className="muted">Loading…</p>
+          ) : recentProject ? (
+            <div className="project-reel">
+              <div
+                className="project-reel-thumb"
+                style={recentProject.thumbnail_url ? { backgroundImage: `url(${recentProject.thumbnail_url})` } : undefined}
+              >
+                {!recentProject.thumbnail_url && <span>No build yet</span>}
+              </div>
+              <p className="project-reel-name">{recentProject.name}</p>
+              <span className={`role-tag ${recentProject.status === 'past' ? '' : 'role-tag-strong'}`}>
+                {recentProject.status === 'past' ? 'Completed' : 'Ongoing'}
+              </span>
+            </div>
+          ) : (
+            <p className="muted">No projects yet — start or join one in the Projects tab.</p>
+          )}
+        </div>
+      )}
+    </aside>
     </div>
   )
 }

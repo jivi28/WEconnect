@@ -76,6 +76,17 @@ export default function App() {
 
   const selectedPerson = selectedId ? people.find((p) => p.id === selectedId) ?? null : null
 
+  // Students and educators only ever see WU Elektronik experts (enforced by
+  // RLS — see supabase/schema.sql section 14), so there's nothing for them
+  // to choose between. Only admins (wurth_employee) get a role toggle, and
+  // only between the two groups they're choosing to view: students or
+  // educators.
+  const roleOptions: Role[] = currentUser?.role === 'expert' ? ['student', 'educator'] : []
+  // Unlike roleOptions, this is non-empty for students/educators too — they
+  // can't filter (there's nothing to choose between), but the legend still
+  // needs to explain the one role they actually see: WU Elektronik experts.
+  const legendRoles: Role[] = currentUser?.role === 'expert' ? ['student', 'educator'] : ['expert']
+
   function toggleRole(role: Role) {
     setFilters((f) => ({ ...f, roles: { ...f.roles, [role]: !f.roles[role] } }))
   }
@@ -95,7 +106,7 @@ export default function App() {
   return (
     <div className="flex min-h-screen flex-col bg-soft">
       {!isEmbedded && <Header currentUser={currentUser} activeNav={activeNav} onNavChange={setActiveNav} />}
-      <Hero activeChip={activeChip} onChipChange={setActiveChip} />
+      <Hero activeChip={activeChip} onChipChange={setActiveChip} roleChips={roleOptions} viewerRole={currentUser.role} />
 
       <main className="mx-auto flex w-full max-w-[1440px] flex-1 flex-col gap-4 px-6 pb-8 lg:flex-row">
         <div className="order-2 lg:order-1 lg:w-[280px] lg:shrink-0">
@@ -106,6 +117,8 @@ export default function App() {
             onInterestQueryChange={(v) => setFilters((f) => ({ ...f, interestQuery: v }))}
             personLimit={personLimit}
             onPersonLimitChange={setPersonLimit}
+            roleOptions={roleOptions}
+            legendRoles={legendRoles}
           />
         </div>
 

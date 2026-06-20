@@ -8,6 +8,13 @@ interface FilterPanelProps {
   onInterestQueryChange: (value: string) => void
   personLimit: number
   onPersonLimitChange: (value: number) => void
+  /** Roles the viewer can choose to show/hide. Students/educators only ever see
+   * WU Elektronik experts, so for them this is empty and the section is hidden. */
+  roleOptions: Role[]
+  /** Roles to show in the legend — the roles that can actually appear as
+   * other people for this viewer (not necessarily the same as roleOptions:
+   * students/educators have nothing to filter, but still see experts). */
+  legendRoles: Role[]
 }
 
 const ROLE_LABELS: { role: Role; label: string }[] = [
@@ -22,7 +29,9 @@ export default function FilterPanel({
   onMinStrengthChange,
   onInterestQueryChange,
   personLimit,
-  onPersonLimitChange
+  onPersonLimitChange,
+  roleOptions,
+  legendRoles
 }: FilterPanelProps) {
   return (
     <aside className="flex h-full flex-col overflow-y-auto rounded-md border border-graylight bg-white p-5 we-scrollbar">
@@ -41,22 +50,24 @@ export default function FilterPanel({
         </select>
       </div>
 
-      <div className="mt-4">
-        <p className="text-[12px] font-semibold text-ink">Role</p>
-        <div className="mt-2 space-y-2">
-          {ROLE_LABELS.map(({ role, label }) => (
-            <label key={role} className="flex items-center gap-2.5 text-sm text-graydark">
-              <input
-                type="checkbox"
-                checked={filters.roles[role]}
-                onChange={() => onToggleRole(role)}
-                className="h-4 w-4 rounded border-graylight text-brand-red focus:ring-brand-red"
-              />
-              {label}
-            </label>
-          ))}
+      {roleOptions.length > 1 && (
+        <div className="mt-4">
+          <p className="text-[12px] font-semibold text-ink">Role</p>
+          <div className="mt-2 space-y-2">
+            {ROLE_LABELS.filter(({ role }) => roleOptions.includes(role)).map(({ role, label }) => (
+              <label key={role} className="flex items-center gap-2.5 text-sm text-graydark">
+                <input
+                  type="checkbox"
+                  checked={filters.roles[role]}
+                  onChange={() => onToggleRole(role)}
+                  className="h-4 w-4 rounded border-graylight text-brand-red focus:ring-brand-red"
+                />
+                {label}
+              </label>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="mt-5">
         <div className="flex items-center justify-between">
@@ -85,7 +96,7 @@ export default function FilterPanel({
         />
       </div>
 
-      <Legend />
+      <Legend roles={legendRoles} />
     </aside>
   )
 }

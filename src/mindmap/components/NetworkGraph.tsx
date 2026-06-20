@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import UserNode from './UserNode'
 import ConnectionNode from './ConnectionNode'
 import HoverProfileCard from './HoverProfileCard'
-import { computeLayout, strengthTier } from '../layout'
+import { computeLayout, scoreToColor, strengthTier } from '../layout'
 import type { CurrentUser, Person } from '../types'
 
 const VIEW_W = 1080
@@ -20,8 +20,6 @@ interface NetworkGraphProps {
   onSelect: (id: string | null) => void
 }
 
-const LINE_COLOR = { strong: '#CC0000', medium: '#959595', weak: '#DEDEDE' }
-const EXPERT_LINE_COLOR = { strong: '#A30000', medium: '#605D5C', weak: '#959595' }
 const LINE_WIDTH = { strong: 3.2, medium: 2, weak: 1.1 }
 
 // A small deterministic bend makes the spokes feel more like an organic
@@ -150,8 +148,7 @@ export default function NetworkGraph({
             if (!pos) return null
             const tier = strengthTier(person.connectionStrength)
             const isActive = activeId === person.id
-            const isExpert = person.role === 'expert'
-            const stroke = isExpert ? EXPERT_LINE_COLOR[tier] : LINE_COLOR[tier]
+            const stroke = scoreToColor(person.connectionStrength)
             const width = LINE_WIDTH[tier] * (isActive ? 1.6 : 1)
 
             return (
@@ -162,7 +159,7 @@ export default function NetworkGraph({
                 stroke={stroke}
                 strokeWidth={width}
                 strokeLinecap="round"
-                opacity={activeId && !isActive ? 0.25 : isExpert ? 0.9 : 0.75}
+                opacity={activeId && !isActive ? 0.25 : 0.85}
                 className={isActive ? 'animate-pulseLine' : ''}
               />
             )
@@ -178,6 +175,7 @@ export default function NetworkGraph({
                 x={pos.x}
                 y={pos.y}
                 index={index}
+                nodeCount={people.length}
                 isHovered={hoveredId === person.id}
                 isSelected={selectedId === person.id}
                 dimmed={Boolean(activeId) && activeId !== person.id}

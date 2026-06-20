@@ -14,17 +14,20 @@ create table if not exists profiles (
 alter table profiles enable row level security;
 
 -- Anyone logged in can view profiles (needed to show names on matches).
+drop policy if exists "Profiles are viewable by authenticated users" on profiles;
 create policy "Profiles are viewable by authenticated users"
   on profiles for select
   to authenticated
   using (true);
 
 -- You can only create/update your own profile row.
+drop policy if exists "Users can insert their own profile" on profiles;
 create policy "Users can insert their own profile"
   on profiles for insert
   to authenticated
   with check (auth.uid() = id);
 
+drop policy if exists "Users can update their own profile" on profiles;
 create policy "Users can update their own profile"
   on profiles for update
   to authenticated
@@ -41,16 +44,19 @@ create table if not exists network_profiles (
 
 alter table network_profiles enable row level security;
 
+drop policy if exists "Network profiles are viewable by authenticated users" on network_profiles;
 create policy "Network profiles are viewable by authenticated users"
   on network_profiles for select
   to authenticated
   using (true);
 
+drop policy if exists "Users can upsert their own network profile" on network_profiles;
 create policy "Users can upsert their own network profile"
   on network_profiles for insert
   to authenticated
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users can update their own network profile" on network_profiles;
 create policy "Users can update their own network profile"
   on network_profiles for update
   to authenticated
@@ -68,16 +74,19 @@ create table if not exists connections (
 
 alter table connections enable row level security;
 
+drop policy if exists "Users can view their own connections" on connections;
 create policy "Users can view their own connections"
   on connections for select
   to authenticated
   using (auth.uid() = user_a or auth.uid() = user_b);
 
+drop policy if exists "Users can create connections involving themselves" on connections;
 create policy "Users can create connections involving themselves"
   on connections for insert
   to authenticated
   with check (auth.uid() = initiated_by and (auth.uid() = user_a or auth.uid() = user_b));
 
+drop policy if exists "Either party can update a connection's status" on connections;
 create policy "Either party can update a connection's status"
   on connections for update
   to authenticated
@@ -94,13 +103,16 @@ create table if not exists events (
 
 alter table events enable row level security;
 
+drop policy if exists "Events are viewable by authenticated users" on events;
 create policy "Events are viewable by authenticated users"
   on events for select to authenticated using (true);
 
+drop policy if exists "Wurth employees can create events" on events;
 create policy "Wurth employees can create events"
   on events for insert to authenticated
   with check (exists (select 1 from profiles where profiles.id = auth.uid() and profiles.role = 'wurth_employee'));
 
+drop policy if exists "Wurth employees can update events" on events;
 create policy "Wurth employees can update events"
   on events for update to authenticated
   using (exists (select 1 from profiles where profiles.id = auth.uid() and profiles.role = 'wurth_employee'));
@@ -118,13 +130,16 @@ create table if not exists user_events (
 
 alter table user_events enable row level security;
 
+drop policy if exists "Users see their own event history, admins see all" on user_events;
 create policy "Users see their own event history, admins see all"
   on user_events for select to authenticated
   using (auth.uid() = user_id or exists (select 1 from profiles where profiles.id = auth.uid() and profiles.role = 'admin'));
 
+drop policy if exists "Users can add themselves to an event" on user_events;
 create policy "Users can add themselves to an event"
   on user_events for insert to authenticated with check (auth.uid() = user_id);
 
+drop policy if exists "Users can remove themselves from an event" on user_events;
 create policy "Users can remove themselves from an event"
   on user_events for delete to authenticated using (auth.uid() = user_id);
 
@@ -141,9 +156,11 @@ create table if not exists projects (
 
 alter table projects enable row level security;
 
+drop policy if exists "Projects are viewable by authenticated users" on projects;
 create policy "Projects are viewable by authenticated users"
   on projects for select to authenticated using (true);
 
+drop policy if exists "Authenticated users can create projects" on projects;
 create policy "Authenticated users can create projects"
   on projects for insert to authenticated with check (true);
 
@@ -156,12 +173,15 @@ create table if not exists project_members (
 
 alter table project_members enable row level security;
 
+drop policy if exists "Project membership is viewable by authenticated users" on project_members;
 create policy "Project membership is viewable by authenticated users"
   on project_members for select to authenticated using (true);
 
+drop policy if exists "Users can join a project themselves" on project_members;
 create policy "Users can join a project themselves"
   on project_members for insert to authenticated with check (auth.uid() = user_id);
 
+drop policy if exists "Users can leave a project themselves" on project_members;
 create policy "Users can leave a project themselves"
   on project_members for delete to authenticated using (auth.uid() = user_id);
 
@@ -192,16 +212,19 @@ create table if not exists onboarding_responses (
 
 alter table onboarding_responses enable row level security;
 
+drop policy if exists "Users insert their own onboarding response" on onboarding_responses;
 create policy "Users insert their own onboarding response"
   on onboarding_responses for insert
   to authenticated
   with check (auth.uid() = user_id);
 
+drop policy if exists "Users read their own onboarding response" on onboarding_responses;
 create policy "Users read their own onboarding response"
   on onboarding_responses for select
   to authenticated
   using (auth.uid() = user_id);
 
+drop policy if exists "Wurth employees read all onboarding responses" on onboarding_responses;
 create policy "Wurth employees read all onboarding responses"
   on onboarding_responses for select
   to authenticated
@@ -212,6 +235,7 @@ create policy "Wurth employees read all onboarding responses"
 -- projects at all.
 alter table projects add column if not exists owner_id uuid references auth.users (id);
 
+drop policy if exists "Owners can update their own project" on projects;
 create policy "Owners can update their own project"
   on projects for update
   to authenticated
@@ -227,6 +251,7 @@ create policy "Owners can update their own project"
 -- project_members already is.
 drop policy if exists "Users see their own event history, admins see all" on user_events;
 
+drop policy if exists "Event attendance is viewable by authenticated users" on user_events;
 create policy "Event attendance is viewable by authenticated users"
   on user_events for select to authenticated using (true);
 
@@ -262,6 +287,7 @@ insert into storage.buckets (id, name, public)
 values ('cvs', 'cvs', false)
 on conflict (id) do nothing;
 
+drop policy if exists "Wurth employees can view CV storage objects" on storage.objects;
 create policy "Wurth employees can view CV storage objects"
   on storage.objects for select
   to authenticated
@@ -273,6 +299,7 @@ create policy "Wurth employees can view CV storage objects"
     )
   );
 
+drop policy if exists "Students can upload their own CV" on storage.objects;
 create policy "Students can upload their own CV"
   on storage.objects for insert
   to authenticated
@@ -282,11 +309,13 @@ create policy "Students can upload their own CV"
     and exists (select 1 from profiles where profiles.id = auth.uid() and profiles.role = 'student')
   );
 
+drop policy if exists "Students can replace or remove their own CV" on storage.objects;
 create policy "Students can replace or remove their own CV"
   on storage.objects for update
   to authenticated
   using (bucket_id = 'cvs' and owner = auth.uid());
 
+drop policy if exists "Students can delete their own CV" on storage.objects;
 create policy "Students can delete their own CV"
   on storage.objects for delete
   to authenticated
@@ -428,4 +457,141 @@ begin
 end;
 $$;
 
+-- 14. Row visibility was still "any authenticated user sees every row" on
+-- profiles and network_profiles (section 1/2's "using (true)" policies) —
+-- that's the same leak section 12 closed for email, just for everything
+-- else (name, interests, role_data, ...). Students could browse other
+-- students' rows, educators other educators', even though the mind map's
+-- UI never offered that filter. Lock it down to mirror get_profile_emails:
+-- everyone sees their own row and any wurth_employee's row; wurth_employee
+-- accounts see everyone. Students/educators never see peer rows (same role,
+-- not themself), only each other's existence is hidden, not wurth_employee's.
+--
+-- A naive "exists (select 1 from profiles where ...)" inside profiles' own
+-- select policy makes Postgres re-evaluate that same policy on the inner
+-- query, which re-triggers the subquery, forever — "infinite recursion
+-- detected in policy for relation profiles" (42P17). Routing the lookup
+-- through a SECURITY DEFINER function sidesteps this the same way
+-- get_profile_email already does: the function runs as the table owner,
+-- who isn't subject to RLS, so the inner read never re-enters the policy.
+create or replace function public.profile_role(target_id uuid)
+returns text
+language sql
+security definer
+stable
+set search_path = public
+as $$
+  select role from profiles where id = target_id;
+$$;
+
+grant execute on function public.profile_role(uuid) to authenticated;
+
+drop policy if exists "Profiles are viewable by authenticated users" on profiles;
+drop policy if exists "Profiles are viewable based on role visibility" on profiles;
+create policy "Profiles are viewable based on role visibility"
+  on profiles for select
+  to authenticated
+  using (
+    auth.uid() = id
+    or role = 'wurth_employee'
+    or public.profile_role(auth.uid()) = 'wurth_employee'
+  );
+
+drop policy if exists "Network profiles are viewable by authenticated users" on network_profiles;
+drop policy if exists "Network profiles are viewable based on role visibility" on network_profiles;
+create policy "Network profiles are viewable based on role visibility"
+  on network_profiles for select
+  to authenticated
+  using (
+    auth.uid() = user_id
+    or public.profile_role(network_profiles.user_id) = 'wurth_employee'
+    or public.profile_role(auth.uid()) = 'wurth_employee'
+  );
+
 grant execute on function public.get_profile_emails(uuid[]) to authenticated;
+
+-- 15. Profile highlights (events + project highlight reel) and the
+-- Events/Projects page rework. Event "going" vs "attended" status is
+-- derived client-side from event_date vs now (no extra column needed), but
+-- "who's hosting" requires a real organizer reference, and both events and
+-- projects need somewhere to point a thumbnail image once one exists (e.g.
+-- the simulation module rendering a built structure) — nullable so the UI
+-- can fall back to a placeholder until that's populated.
+alter table events add column if not exists organizer_id uuid references auth.users (id);
+alter table events add column if not exists thumbnail_url text;
+
+alter table projects add column if not exists thumbnail_url text;
+alter table projects add column if not exists status text not null default 'ongoing'
+  check (status in ('ongoing', 'past'));
+
+-- 16. Leaderboard handle, separate from `name`. `name` (section 1) stays
+-- whatever the real-world identity is (used e.g. for CV/recruiting context);
+-- `username` is the public handle shown on the leaderboard, so it gets its
+-- own unique constraint and its own column grant (mirrors the section 12/14
+-- pattern: authenticated only ever gets SELECT on an explicit column list,
+-- never a blanket one). Column starts nullable here only so this ALTER
+-- doesn't fail against existing rows — section 18 below backfills them and
+-- then locks it to NOT NULL, so by the end of this file nobody can have an
+-- account without one.
+alter table profiles add column if not exists username text;
+
+alter table profiles drop constraint if exists profiles_username_unique;
+alter table profiles add constraint profiles_username_unique unique (username);
+
+grant select (username) on public.profiles to authenticated;
+
+-- handle_new_user() (section 11) needs to read the new field out of signup
+-- metadata too, or every account created after this migration would have
+-- a null username regardless of what the signup form sent.
+create or replace function public.handle_new_user()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  insert into public.profiles (id, name, email, role, role_data, source_event_id, verification_status, username)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'name', ''),
+    new.email,
+    coalesce(new.raw_user_meta_data->>'role', 'student'),
+    coalesce(new.raw_user_meta_data->'role_data', '{}'::jsonb),
+    (new.raw_user_meta_data->>'source_event_id')::uuid,
+    coalesce(new.raw_user_meta_data->>'verification_status', 'pending'),
+    new.raw_user_meta_data->>'username'
+  )
+  on conflict (id) do nothing;
+  return new;
+end;
+$$;
+
+-- 17. The "which event brought you here" dropdown on the signup form runs
+-- before the visitor has a session (signUp() hasn't been called yet), so
+-- the existing "to authenticated" select policy on events silently hid the
+-- whole catalog from it — the query didn't error, it just came back empty
+-- under RLS. Events aren't sensitive, so let anon read them too.
+drop policy if exists "Events are viewable by anyone, including pre-signup visitors" on events;
+create policy "Events are viewable by anyone, including pre-signup visitors"
+  on events for select
+  to anon
+  using (true);
+
+-- 18. Section 16 left `username` nullable so the migration itself wouldn't
+-- fail on pre-existing rows. That's no longer good enough: username has to
+-- be mandatory at signup with no way around it, not just an HTML `required`
+-- attribute the client can skip by hitting the API directly. A NOT NULL
+-- column constraint is the only place that's actually unavoidable — it
+-- fails the whole signUp() call (handle_new_user's insert rolls back inside
+-- the same transaction as the auth.users row) if no username was sent.
+-- Backfill first so the constraint doesn't reject rows that predate this
+-- migration; those accounts can rename via the profile page afterward.
+update profiles set username = 'user-' || substr(id::text, 1, 8) where username is null;
+
+alter table profiles alter column username set not null;
+
+-- NOT NULL alone still lets an empty string through (it's a value, just not
+-- a useful one) — block that too so "must be sent" can't be satisfied by
+-- submitting a blank field.
+alter table profiles drop constraint if exists profiles_username_not_blank;
+alter table profiles add constraint profiles_username_not_blank check (length(trim(username)) > 0);

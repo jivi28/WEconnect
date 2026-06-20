@@ -70,7 +70,7 @@ export async function loadNetworkData() {
 
   const currentUser: CurrentUser = {
     name: myProfile?.name || 'You',
-    role: 'Student',
+    role: toMindmapRole(myProfile?.role || 'student'),
     email: authData.user?.email || '',
     imageUrl: '',
     mainInterests: (myNetwork?.interests || []).join(', ')

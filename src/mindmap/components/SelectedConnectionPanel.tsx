@@ -102,15 +102,6 @@ export default function SelectedConnectionPanel({ person }: SelectedConnectionPa
         </div>
         <p className="mt-2 text-[12px] text-graydark">{person.connectionReason}</p>
       </div>
-
-      <div className="mt-5 flex gap-2">
-        <button className="group flex flex-1 items-center justify-between overflow-hidden">
-          <span className="flex-1 bg-ink px-3 py-2 text-left text-[12px] font-bold uppercase tracking-wide text-white">
-            Message
-          </span>
-          <ArrowButton size={34} />
-        </button>
-      </div>
     </aside>
   )
 }

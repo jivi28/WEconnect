@@ -21,7 +21,7 @@ export interface Person {
 
 export interface CurrentUser {
   name: string
-  role: 'Student'
+  role: Role
   email: string
   imageUrl: string
   mainInterests: string

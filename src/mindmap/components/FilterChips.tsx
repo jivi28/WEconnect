@@ -1,6 +1,6 @@
 export type ChipKey = 'all' | 'student' | 'educator' | 'expert' | 'strongest'
 
-const CHIPS: { key: ChipKey; label: string }[] = [
+const ALL_CHIPS: { key: ChipKey; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'student', label: 'Students' },
   { key: 'educator', label: 'Educators' },
@@ -11,12 +11,17 @@ const CHIPS: { key: ChipKey; label: string }[] = [
 interface FilterChipsProps {
   active: ChipKey
   onChange: (key: ChipKey) => void
+  /** Role chips to offer beyond "All" and "Strongest connections". Students/
+   * educators only ever see WU Elektronik experts, so there's nothing to
+   * choose between and this is empty for them. */
+  roleChips: ChipKey[]
 }
 
-export default function FilterChips({ active, onChange }: FilterChipsProps) {
+export default function FilterChips({ active, onChange, roleChips }: FilterChipsProps) {
+  const chips = ALL_CHIPS.filter((chip) => chip.key === 'all' || chip.key === 'strongest' || roleChips.includes(chip.key))
   return (
     <div className="flex flex-wrap gap-2">
-      {CHIPS.map((chip) => {
+      {chips.map((chip) => {
         const isActive = active === chip.key
         return (
           <button

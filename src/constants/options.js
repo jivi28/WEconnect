@@ -83,8 +83,6 @@ export const GENERAL_INTERESTS = [
 
 export const SITES = ['Waldenburg', 'Munich', 'Niedernhall', 'Waldzimmern']
 
-export const CONTACT_CHANNELS = ['Platform inbox', 'Email']
-
 // MOCK university-affiliation check for signup (Task 2) — not a real
 // integration with any university system. A student/educator signup email
 // whose domain matches one of these is auto-verified; everything else

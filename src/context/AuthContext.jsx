@@ -40,7 +40,9 @@ export function AuthProvider({ children }) {
     // user's own email comes from the auth session (`user.email`) instead.
     const { data } = await supabase
       .from('profiles')
-      .select('id, name, role, role_data, source_event_id, onboarding_completed, verification_status, cv_file_path, created_at')
+      .select(
+        'id, name, username, role, role_data, source_event_id, onboarding_completed, verification_status, cv_file_path, created_at'
+      )
       .eq('id', userId)
       .single()
     setProfile(data || null)
@@ -50,7 +52,7 @@ export function AuthProvider({ children }) {
   // name, email, password, role ('student' | 'educator' | 'wurth_employee'), roleData (role-specific fields)
   // verificationStatus: 'verified' | 'pending' — decided by Signup.jsx's mock
   // university-affiliation check before this is called (see UNIVERSITY_EMAIL_ALLOWLIST).
-  async function signup({ name, email, password, role, roleData, sourceEventId, verificationStatus }) {
+  async function signup({ name, username, email, password, role, roleData, sourceEventId, verificationStatus }) {
     // Metadata goes through options.data, not a follow-up client insert: the
     // `profiles` row is created server-side by the on_auth_user_created
     // trigger (see supabase/schema.sql) so it doesn't depend on a session
@@ -62,6 +64,7 @@ export function AuthProvider({ children }) {
       options: {
         data: {
           name,
+          username,
           role,
           role_data: roleData || {},
           source_event_id: sourceEventId || null,
@@ -77,6 +80,7 @@ export function AuthProvider({ children }) {
     const row = {
       id: user.id,
       name,
+      username,
       email,
       role,
       role_data: roleData || {},

@@ -1,4 +1,4 @@
-import { BUSINESS_UNITS, CONTACT_CHANNELS, FIELDS_OF_STUDY, SEMESTERS, SITES } from '../constants/options'
+import { BUSINESS_UNITS, FIELDS_OF_STUDY, SEMESTERS, SITES } from '../constants/options'
 
 // Renders different fields depending on role. Used in both Signup and Profile,
 // so the "different data saved per role" logic lives in one place.
@@ -18,7 +18,6 @@ export const ROLE_FIELD_DEFS = {
   wurth_employee: [
     { key: 'site', label: 'Standort (site)', type: 'select', options: SITES },
     { key: 'businessUnit', label: 'Business unit / Abteilung', type: 'select', options: BUSINESS_UNITS },
-    { key: 'contactChannel', label: 'Preferred contact channel', type: 'select', options: CONTACT_CHANNELS },
     { key: 'linkedinUrl', label: 'LinkedIn (optional)', type: 'text' }
   ]
 }
