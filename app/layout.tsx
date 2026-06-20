@@ -1,21 +1,28 @@
-import type { Metadata } from "next";
-import "leaflet/dist/leaflet.css";
-import "./globals.css";
+import type React from "react"
+import type { Metadata } from "next"
+import { Figtree } from "next/font/google"
+import "./globals.css"
+
+const figtree = Figtree({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-figtree",
+})
 
 export const metadata: Metadata = {
-  title: "WEconnect — Event ROI Analysis",
-  description:
-    "Würth Electronics company dashboard for analyzing the ROI of student-connection events worldwide.",
-};
+  title: "v0 App",
+  description: "Created with v0",
+  generator: "v0.app",
+}
 
 export default function RootLayout({
   children,
-}: {
-  children: React.ReactNode;
-}) {
+}: Readonly<{
+  children: React.ReactNode
+}>) {
   return (
-    <html lang="en">
-      <body className="h-full antialiased">{children}</body>
+    <html lang="en" className={`${figtree.variable} antialiased`}>
+      <body className="font-sans">{children}</body>
     </html>
-  );
+  )
 }

@@ -7,11 +7,13 @@ import {
   Marker,
   Tooltip,
   GeoJSON,
+  ZoomControl,
 } from "react-leaflet";
 import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 import type { Feature, FeatureCollection } from "geojson";
-import type { ScoredEvent, RegionAnalytics } from "@/lib/types";
-import { TIER_COLOR } from "@/lib/format";
+import type { ScoredEvent, RegionAnalytics } from "@/lib/weconnect/types";
+import { TIER_COLOR } from "@/lib/weconnect/format";
 
 // HTML pin rendered in Leaflet's markerPane, which sits above the region
 // polygons — so clicking an event near a border always selects the event,
@@ -21,8 +23,8 @@ function eventIcon(event: ScoredEvent, selected: boolean): L.DivIcon {
   const color = TIER_COLOR[event.tier];
   // Low-data events render hollow + dashed so their (dampened) ROI isn't read as solid.
   const border = event.lowData
-    ? `2px dashed ${selected ? "#ffffff" : "rgba(255,255,255,0.85)"}`
-    : `${selected ? 3 : 2}px solid ${selected ? "#ffffff" : "rgba(255,255,255,0.75)"}`;
+    ? `2px dashed ${selected ? "#1d252d" : "rgba(29,37,45,0.6)"}`
+    : `${selected ? 3 : 2}px solid ${selected ? "#1d252d" : "rgba(255,255,255,0.9)"}`;
   return L.divIcon({
     className: "we-event-pin",
     iconSize: [size, size],
@@ -31,7 +33,7 @@ function eventIcon(event: ScoredEvent, selected: boolean): L.DivIcon {
       display:block;width:${size}px;height:${size}px;border-radius:9999px;
       background:${event.lowData ? "transparent" : color};
       border:${border};
-      box-shadow:0 0 0 1px rgba(0,0,0,0.4)${selected ? `,0 0 12px ${color}` : ""};
+      box-shadow:0 0 0 1px rgba(0,0,0,0.25)${selected ? `,0 0 12px ${color}` : ""};
       cursor:pointer;"></span>`,
   });
 }
@@ -78,17 +80,19 @@ export default function EuropeMap({
 
   return (
     <MapContainer
-      center={[25, 10]}
-      zoom={2}
+      center={[48, 12]}
+      zoom={4}
       minZoom={2}
       maxZoom={10}
       worldCopyJump
       className="h-full w-full"
       scrollWheelZoom
+      zoomControl={false}
     >
+      <ZoomControl position="topright" />
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
+        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
       />
 
       {countries && (
@@ -98,11 +102,11 @@ export default function EuropeMap({
           style={(feature) => {
             const region = feature ? regionByName.get(featureName(feature).toLowerCase()) : undefined;
             if (!region) {
-              return { fillOpacity: 0, color: "#3f3f46", weight: 0.5 };
+              return { fillOpacity: 0, color: "#d4d4d8", weight: 0.5 };
             }
             return {
               fillColor: TIER_COLOR[region.tier],
-              fillOpacity: 0.28,
+              fillOpacity: 0.25,
               color: TIER_COLOR[region.tier],
               weight: 1,
             };

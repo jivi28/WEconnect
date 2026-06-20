@@ -1,5 +1,5 @@
-import { Dashboard } from "@/components/Dashboard";
+import { CRMDashboard } from "@/components/crm-dashboard"
 
 export default function Home() {
-  return <Dashboard />;
+  return <CRMDashboard />
 }

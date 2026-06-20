@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getScoredEvents } from "@/lib/analytics";
-import { weightsFromParams } from "@/lib/roi";
-import { isMockMode } from "@/lib/mock";
+import { getScoredEvents } from "@/lib/weconnect/analytics";
+import { weightsFromParams } from "@/lib/weconnect/roi";
+import { isMockMode } from "@/lib/weconnect/mock";
 
 export const dynamic = "force-dynamic";
 
