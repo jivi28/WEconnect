@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#__next {
+  height: 100%;
+}
+
+body {
+  @apply bg-neutral-950 text-neutral-100;
+}
+
+/* Leaflet renders its own panes; make sure the container fills its parent. */
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  background: #0a0a0a;
+}
