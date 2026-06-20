@@ -20,7 +20,7 @@ export default function Header({ currentUser, activeNav, onNavChange }: HeaderPr
           </span>
           <div className="hidden leading-tight sm:block">
             <p className="text-[14px] font-extrabold uppercase tracking-tight text-white">
-              WU Elektronik <span className="text-brand-red">Connect</span>
+              Würth Elektronik <span className="text-brand-red">Connect</span>
             </p>
             <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-graymed">
               Connection Network

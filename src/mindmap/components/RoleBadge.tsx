@@ -11,7 +11,7 @@ const ROLE_META: Record<Role, { label: string; classes: string }> = {
     classes: 'bg-white text-brand-red border border-brand-red'
   },
   expert: {
-    label: 'WU Elektronik Expert',
+    label: 'Würth Elektronik Expert',
     classes: 'bg-brand-red text-white border border-brand-red'
   }
 }

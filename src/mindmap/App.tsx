@@ -76,7 +76,7 @@ export default function App() {
 
   const selectedPerson = selectedId ? people.find((p) => p.id === selectedId) ?? null : null
 
-  // Students and educators only ever see WU Elektronik experts (enforced by
+  // Students and educators only ever see Würth Elektronik experts (enforced by
   // RLS — see supabase/schema.sql section 14), so there's nothing for them
   // to choose between. Only admins (wurth_employee) get a role toggle, and
   // only between the two groups they're choosing to view: students or
@@ -84,7 +84,7 @@ export default function App() {
   const roleOptions: Role[] = currentUser?.role === 'expert' ? ['student', 'educator'] : []
   // Unlike roleOptions, this is non-empty for students/educators too — they
   // can't filter (there's nothing to choose between), but the legend still
-  // needs to explain the one role they actually see: WU Elektronik experts.
+  // needs to explain the one role they actually see: Würth Elektronik experts.
   const legendRoles: Role[] = currentUser?.role === 'expert' ? ['student', 'educator'] : ['expert']
 
   function toggleRole(role: Role) {

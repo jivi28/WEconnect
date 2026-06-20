@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Profile from './Profile'
 import Network from './Network'
@@ -13,7 +14,11 @@ const BASE_TABS = [
 
 export default function Home() {
   const { profile, logout } = useAuth()
-  const [tab, setTab] = useState('profile')
+  // The admin event pages (routes/Admin, routes/AdminEvent) live outside this
+  // tab UI; their "back" links land here with state.initialTab so admins
+  // return to the Events tab they came from instead of defaulting to Profile.
+  const location = useLocation()
+  const [tab, setTab] = useState(location.state?.initialTab || 'profile')
   const isWurthEmployee = profile.role === 'wurth_employee'
 
   const tabs = [

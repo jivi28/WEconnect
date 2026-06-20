@@ -10,9 +10,9 @@ interface HeroProps {
 
 const EXPLANATION: Record<Role, string> = {
   student:
-    'This map shows your connections to WU Elektronik experts, ranked by shared interests and goals — not other students or educators. Experts are public contacts, so you can always see and reach them here.',
+    'This map shows your connections to Würth Elektronik experts, ranked by shared interests and goals — not other students or educators. Experts are public contacts, so you can always see and reach them here.',
   educator:
-    'This map shows your connections to WU Elektronik experts, ranked by shared interests and goals — not other educators or students. Experts are public contacts, so you can always see and reach them here.',
+    'This map shows your connections to Würth Elektronik experts, ranked by shared interests and goals — not other educators or students. Experts are public contacts, so you can always see and reach them here.',
   expert:
     'This map shows your connections to students and educators, ranked by shared interests and goals. Use the filter to switch between viewing students or educators.'
 }

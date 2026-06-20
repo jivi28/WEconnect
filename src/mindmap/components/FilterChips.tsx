@@ -4,7 +4,7 @@ const ALL_CHIPS: { key: ChipKey; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'student', label: 'Students' },
   { key: 'educator', label: 'Educators' },
-  { key: 'expert', label: 'WU Elektronik' },
+  { key: 'expert', label: 'Würth Elektronik' },
   { key: 'strongest', label: 'Strongest connections' }
 ]
 
@@ -12,7 +12,7 @@ interface FilterChipsProps {
   active: ChipKey
   onChange: (key: ChipKey) => void
   /** Role chips to offer beyond "All" and "Strongest connections". Students/
-   * educators only ever see WU Elektronik experts, so there's nothing to
+   * educators only ever see Würth Elektronik experts, so there's nothing to
    * choose between and this is empty for them. */
   roleChips: ChipKey[]
 }

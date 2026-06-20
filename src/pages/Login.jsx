@@ -27,9 +27,8 @@ export default function Login({ onSwitchToSignup }) {
         <p className="we-wordmark">
           WE<span>connect</span>
         </p>
-        <p className="eyebrow">Network module</p>
         <h1>Log in</h1>
-        <p className="subtitle">Pick up where your connections left off.</p>
+        <p className="subtitle">Create, connect, prove.</p>
 
         <form onSubmit={handleSubmit} className="form">
           <label className="field">

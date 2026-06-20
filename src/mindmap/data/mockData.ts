@@ -113,7 +113,7 @@ export const people: Person[] = [
     connectionReason: '2 shared academic interests'
   },
 
-  // ---- WU Elektronik experts ----
+  // ---- Würth Elektronik experts ----
   {
     id: 'exp-1',
     name: 'Jonas Keller',

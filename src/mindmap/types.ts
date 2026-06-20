@@ -5,7 +5,7 @@ export interface Person {
   name: string
   role: Role
   imageUrl: string
-  /** Main interest (student/educator) or expertise area (WU Elektronik expert) */
+  /** Main interest (student/educator) or expertise area (Würth Elektronik expert) */
   mainInterest: string
   projectNames?: string[]
   sharedInterests: string[]

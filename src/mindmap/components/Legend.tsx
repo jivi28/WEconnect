@@ -2,7 +2,7 @@ import RoleIcon from './RoleIcon'
 import type { Role } from '../types'
 
 interface LegendProps {
-  /** Which role icons to show. Students/educators only ever see WU Elektronik
+  /** Which role icons to show. Students/educators only ever see Würth Elektronik
    * experts, so they only get that one entry; admins see students and
    * educators (the two groups their filter switches between). */
   roles: Role[]
@@ -46,7 +46,7 @@ export default function Legend({ roles }: LegendProps) {
             <span className="flex h-5 w-5 items-center justify-center rounded-full bg-brand-red text-white">
               <RoleIcon role="expert" size={11} />
             </span>
-            WU Elektronik Expert
+            Würth Elektronik Expert
           </li>
         )}
       </ul>

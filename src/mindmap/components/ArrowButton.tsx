@@ -3,7 +3,7 @@ interface ArrowButtonProps {
   className?: string
 }
 
-/** The small red square + white arrow CTA mark used throughout WU Elektronik's site. */
+/** The small red square + white arrow CTA mark used throughout Würth Elektronik's site. */
 export default function ArrowButton({ size = 28, className = '' }: ArrowButtonProps) {
   return (
     <span

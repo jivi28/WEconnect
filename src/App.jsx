@@ -1,12 +1,39 @@
 import { useState } from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import VerificationPending from './pages/VerificationPending'
 import Onboarding from './pages/Onboarding'
 import Home from './pages/Home'
+import Admin from './routes/Admin'
+import AdminEvent from './routes/AdminEvent'
+import NewEvent from './routes/NewEvent'
+import Register from './routes/Register'
+import Slides from './routes/Slides'
 
+// Router lives here (not main.jsx) so the QR routes get the same
+// AuthProvider context as the rest of the app without touching main.jsx.
+// Würth-employee admin (QR/slides/hosts) and the attendee-facing QR
+// registration + slides routes sit outside the auth-gated "/*" app below —
+// /register in particular must be reachable by someone scanning a QR code
+// who has no account yet.
 export default function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/admin" element={<Admin />} />
+        <Route path="/admin/new" element={<NewEvent />} />
+        <Route path="/admin/:eventId" element={<AdminEvent />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/slides" element={<Slides />} />
+        <Route path="/*" element={<MainApp />} />
+      </Routes>
+    </BrowserRouter>
+  )
+}
+
+function MainApp() {
   const { user, profile, loading } = useAuth()
   const [authView, setAuthView] = useState('login') // 'login' | 'signup'
 

@@ -105,7 +105,6 @@ export default function Signup({ onSwitchToLogin }) {
         <p className="we-wordmark">
           WE<span>connect</span>
         </p>
-        <p className="eyebrow">Network module</p>
         <h1>Create your account</h1>
         <p className="subtitle">Tell us who you are so we can shape your view of the network.</p>
 

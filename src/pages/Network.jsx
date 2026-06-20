@@ -199,6 +199,9 @@ export default function Network() {
         <button className="btn-secondary" onClick={() => setEditing(true)}>
           Redo map
         </button>
+        <span className="muted" style={{ fontSize: '0.85rem' }}>
+          Redo your map if you want to change your interests.
+        </span>
       </div>
       <div className="map-embed" ref={mapWrapperRef} onClick={() => setMapActive(true)}>
         <iframe

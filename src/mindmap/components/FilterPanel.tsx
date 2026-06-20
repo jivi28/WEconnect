@@ -9,7 +9,7 @@ interface FilterPanelProps {
   personLimit: number
   onPersonLimitChange: (value: number) => void
   /** Roles the viewer can choose to show/hide. Students/educators only ever see
-   * WU Elektronik experts, so for them this is empty and the section is hidden. */
+   * Würth Elektronik experts, so for them this is empty and the section is hidden. */
   roleOptions: Role[]
   /** Roles to show in the legend — the roles that can actually appear as
    * other people for this viewer (not necessarily the same as roleOptions:
@@ -20,7 +20,7 @@ interface FilterPanelProps {
 const ROLE_LABELS: { role: Role; label: string }[] = [
   { role: 'student', label: 'Students' },
   { role: 'educator', label: 'Educators' },
-  { role: 'expert', label: 'WU Elektronik' }
+  { role: 'expert', label: 'Würth Elektronik' }
 ]
 
 export default function FilterPanel({

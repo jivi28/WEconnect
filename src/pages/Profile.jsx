@@ -57,10 +57,16 @@ export default function Profile({ onNavigate }) {
 
   async function loadExtras() {
     setLoadingExtras(true)
-    const [{ data: net }, { data: events }, { data: members }, { data: owned }, sourceEventResult] =
+    const [{ data: net }, { data: events }, { data: hosted }, { data: members }, { data: owned }, sourceEventResult] =
       await Promise.all([
         supabase.from('network_profiles').select('*').eq('user_id', user.id).maybeSingle(),
         supabase.from('user_events').select('event_id, events(*)').eq('user_id', user.id),
+        // Hosting an event (events.host_ids) is separate from attending one
+        // (user_events) — a host who never registered via the QR flow would
+        // otherwise never see their own event in "Recently attended".
+        isWurthEmployee
+          ? supabase.from('events').select('*').contains('host_ids', [user.id])
+          : Promise.resolve({ data: [] }),
         isWurthEmployee
           ? Promise.resolve({ data: [] })
           : supabase.from('project_members').select('project_id, created_at, projects(*)').eq('user_id', user.id),
@@ -72,7 +78,12 @@ export default function Profile({ onNavigate }) {
           : Promise.resolve({ data: null })
       ])
     setNetworkProfile(net || null)
-    setMyEvents(events || [])
+
+    const attendedRows = events || []
+    const hostedRows = (hosted || [])
+      .filter((e) => !attendedRows.some((r) => r.event_id === e.id))
+      .map((e) => ({ event_id: e.id, events: e }))
+    setMyEvents([...attendedRows, ...hostedRows])
 
     const candidates = [...(members || []).map((m) => m.projects).filter(Boolean), ...(owned || [])]
     const deduped = [...new Map(candidates.map((p) => [p.id, p])).values()]
@@ -160,6 +171,21 @@ export default function Profile({ onNavigate }) {
       return
     }
     window.open(data.signedUrl, '_blank', 'noopener,noreferrer')
+  }
+
+  async function handleRemoveCv() {
+    if (!window.confirm('Remove your uploaded CV?')) return
+    setCvError('')
+    setCvUploading(true)
+    try {
+      const { error: removeError } = await supabase.storage.from('cvs').remove([profile.cv_file_path])
+      if (removeError) throw removeError
+      await updateProfile({ cv_file_path: null })
+    } catch (err) {
+      setCvError(err.message || 'Could not remove your CV. Please try again.')
+    } finally {
+      setCvUploading(false)
+    }
   }
 
   const opportunityTags = isWurthEmployee
@@ -286,13 +312,16 @@ export default function Profile({ onNavigate }) {
               <button type="button" className="link-btn" onClick={handleViewCv}>
                 View current CV
               </button>
+              <button type="button" className="link-btn-danger" onClick={handleRemoveCv} disabled={cvUploading}>
+                Remove CV
+              </button>
             </div>
           )}
           <label className="field">
             <span>{profile.cv_file_path ? 'Replace CV (PDF, max 5MB)' : 'Upload CV (PDF, max 5MB)'}</span>
             <input type="file" accept="application/pdf" onChange={handleCvUpload} disabled={cvUploading} />
           </label>
-          {cvUploading && <p className="muted">Uploading…</p>}
+          {cvUploading && <p className="muted">Working…</p>}
           {cvError && <p className="error">{cvError}</p>}
         </div>
       )}

@@ -23,6 +23,7 @@
      LINE_COLOR/EXPERT_LINE_COLOR). Not the earlier unverified guesses. */
   --we-red: #cc0000;
   --we-red-dark: #a30000;
+  --we-red-soft: #fdecea;
   --we-ink: #1f1f1f;
   --we-gray-700: #605d5c;
   --we-gray-200: #dedede;
@@ -315,6 +316,12 @@ textarea {
   margin: 0;
 }
 
+.success {
+  color: var(--teal);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
 .btn-primary {
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
   color: white;
@@ -331,6 +338,49 @@ textarea {
   box-shadow: 0 14px 28px -10px rgba(45, 91, 255, 0.6);
 }
 .btn-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-cta {
+  background: linear-gradient(135deg, var(--we-red) 0%, var(--we-red-dark) 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 0.85rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: 0 14px 30px -14px rgba(204, 0, 0, 0.55);
+}
+.btn-cta:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, var(--we-red-dark) 0%, var(--we-red-dark) 100%);
+  box-shadow: 0 18px 34px -12px rgba(163, 0, 0, 0.6);
+}
+.btn-cta:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-danger {
+  background: var(--we-red);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 0.7rem 1.3rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 24px -12px rgba(204, 0, 0, 0.5);
+}
+.btn-danger:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: var(--we-red-dark);
+}
+.btn-danger:disabled {
   opacity: 0.6;
   cursor: default;
 }
@@ -562,6 +612,11 @@ textarea {
   gap: 1rem;
 }
 
+.card-danger {
+  border-color: rgba(204, 0, 0, 0.25);
+  background: #fffaf9;
+}
+
 .card-actions {
   display: flex;
   align-items: center;
@@ -770,21 +825,41 @@ textarea {
   display: flex;
   align-items: flex-start;
   gap: 2rem;
+  /* Centers the whole profile page (header, role/CV/network cards, AND the
+     highlights aside) within .main's available width instead of leaving it
+     pinned to the left edge with empty space on the right. */
+  max-width: 1220px;
+  margin: 0 auto;
 }
 
 .profile-main {
   flex: 1;
   min-width: 0;
+  /* Wider than the shared .panel cap (760px) — the profile's own info
+     column has room to breathe that other single-column .panel pages don't
+     need. Same specificity as .panel, so ordering (this rule comes later)
+     is what makes it win; keep it below .panel in the stylesheet. */
+  max-width: 860px;
 }
 
 .profile-aside {
-  flex: 0 0 320px;
+  /* Grows into whatever room is left next to .profile-main (which is capped
+     at 760px), then align-items centers the fixed-width highlight cards
+     within that grown space instead of leaving them pinned to its left
+     edge, flush against the main column. */
+  flex: 1 1 320px;
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 
 .profile-aside .card:first-child {
   margin-top: 0;
+}
+
+.highlight-card {
+  width: 100%;
+  max-width: 320px;
 }
 
 .status-dot {
@@ -795,7 +870,7 @@ textarea {
 }
 
 .status-dot-upcoming {
-  background: var(--accent);
+  background: var(--we-red);
 }
 
 .status-dot-past {
@@ -870,6 +945,13 @@ textarea {
 .events-main {
   flex: 1;
   min-width: 0;
+}
+
+.events-main-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
 .sidebar-section .eyebrow {
@@ -957,5 +1039,242 @@ textarea {
 @media (prefers-reduced-motion: reduce) {
   * {
     transition: none !important;
+  }
+}
+
+/* QR feature (routes/Admin, Register, Slides): only the classes not already
+   defined above — .card and .muted reuse the app's existing styles.
+   routes/AdminEvent and routes/NewEvent use the shell/card/form classes
+   below instead, to match the rest of the app. */
+.wrap { max-width: 720px; margin: 0 auto; padding: 24px; }
+.err { color: #c8102e; font-size: 13px; }
+.ok { color: #1a7f37; font-size: 13px; }
+.row { display: flex; gap: 8px; align-items: center; }
+.qr { margin-top: 8px; max-width: 200px; }
+button.secondary { background: #444; }
+
+/* ---------- Event admin pages (routes/AdminEvent, routes/NewEvent) ---------- */
+
+.admin-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-decoration: none;
+  color: var(--we-gray-700);
+  font-weight: 700;
+  font-size: 0.92rem;
+  margin-bottom: 1.5rem;
+}
+.admin-back-link:hover {
+  color: var(--we-red);
+}
+.admin-back-link svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.qr-card-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1.25rem;
+  margin-top: 0.75rem;
+}
+
+.qr-image {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.75rem;
+  width: 150px;
+  height: 150px;
+  flex-shrink: 0;
+}
+
+.qr-link {
+  flex: 1;
+  min-width: 200px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--muted);
+  word-break: break-all;
+  background: var(--we-gray-50);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+}
+
+.host-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.85rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.host-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--we-gray-50);
+  border-radius: 8px;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.88rem;
+}
+
+.host-add-row {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+.host-add-row input {
+  flex: 1;
+}
+
+.file-field {
+  margin-top: 0.85rem;
+}
+
+.link-btn-danger {
+  background: none;
+  border: none;
+  color: var(--we-red);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0;
+}
+.link-btn-danger:hover {
+  text-decoration: underline;
+}
+
+.field-alert-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.6rem;
+}
+
+.field-alert {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  line-height: 1.2;
+  animation: field-alert-in 0.15s ease;
+}
+
+.field-alert-error {
+  background: var(--we-red-soft);
+  color: var(--we-red-dark);
+}
+
+.field-alert-success {
+  background: var(--teal-soft);
+  color: var(--teal);
+}
+
+/* ---------- WE-red button variants (event admin pages use these instead of
+   the blue .btn-primary/.btn-secondary, to match the rest of the brand) ---------- */
+
+.btn-primary-we {
+  background: linear-gradient(135deg, var(--we-red) 0%, var(--we-red-dark) 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 0.7rem 1.3rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 24px -12px rgba(204, 0, 0, 0.5);
+}
+.btn-primary-we:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px -10px rgba(163, 0, 0, 0.6);
+}
+.btn-primary-we:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-secondary-we {
+  background: var(--we-red-soft);
+  color: var(--we-red-dark);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 0.55rem 1rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-secondary-we:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px -10px rgba(204, 0, 0, 0.3);
+}
+.btn-secondary-we:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Scoped override so event admin pages (AdminEvent, NewEvent) use red focus
+   rings/checkboxes instead of the site-wide blue accent — kept local to
+   .event-admin-panel so Login/Signup/Network/Profile/Projects are untouched. */
+.event-admin-panel input:focus,
+.event-admin-panel textarea:focus,
+.event-admin-panel select:focus {
+  border-color: var(--we-red);
+  box-shadow: 0 0 0 3px var(--we-red-soft);
+}
+.event-admin-panel input[type='checkbox'] {
+  accent-color: var(--we-red);
+}
+
+/* ---------- Event detail modal (students/educators viewing an event) ---------- */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 31, 31, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 50;
+}
+
+.modal-card {
+  max-width: 440px;
+  width: 100%;
+  margin-top: 0;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 1.1rem;
+  right: 1.1rem;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: var(--muted);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+.modal-close:hover {
+  color: var(--we-red);
+}
+
+@keyframes field-alert-in {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
