@@ -1,3 +1,11 @@
+# MCP config (may contain secrets like access tokens)
+.mcp.json
+.env
+.env.*
+
+# Local Claude Code settings (may contain secrets / personal allowlists)
+.claude/
+
 # Logs
 logs
 *.log
