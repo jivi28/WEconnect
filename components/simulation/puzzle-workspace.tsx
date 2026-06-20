@@ -47,9 +47,11 @@ const SLOT_ICONS: Record<string, Icon> = {
 export function PuzzleWorkspace({
   data,
   onExpand,
+  onComplete,
 }: {
   data: SimulationData;
   onExpand: (component: SimulationComponent) => void;
+  onComplete?: () => void;
 }) {
   const [selected, setSelected] = useState<SimulationComponent | null>(null);
   const [placed, setPlaced] = useState<Record<number, SimulationComponent>>({});
@@ -64,6 +66,7 @@ export function PuzzleWorkspace({
   useEffect(() => {
     if (!complete || celebrated.current) return;
     celebrated.current = true;
+    onComplete?.();
     const timer = setTimeout(() => {
       const rect = revealRef.current?.getBoundingClientRect();
       confetti({

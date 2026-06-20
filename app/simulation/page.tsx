@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Simulator } from "@/components/simulation/simulator";
+import { AuthProvider } from "@/components/auth/auth-provider";
+import { DevSignIn } from "@/components/auth/dev-sign-in";
 
 export const metadata: Metadata = {
   title: "Innovation Simulator — Würth Elektronik",
@@ -8,5 +10,10 @@ export const metadata: Metadata = {
 };
 
 export default function SimulationPage() {
-  return <Simulator />;
+  return (
+    <AuthProvider>
+      <Simulator />
+      <DevSignIn />
+    </AuthProvider>
+  );
 }
