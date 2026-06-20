@@ -20,9 +20,9 @@ export const DEFAULT_WEIGHTS: RoiWeights = {
  * Tune these to Würth's real expectations.
  */
 export const BENCHMARKS = {
-  newUsers: 100, // a strong event acquires ~100 new platform users
-  avgConnections: 4, // a healthy attendee makes ~4 connections
-  avgSimulations: 4, // an engaged attendee runs ~4 simulations
+  newUsers: 15, // a strong event acquires ~15 new platform users (demo-scale)
+  avgConnections: 3, // a healthy attendee makes ~3 connections
+  avgSimulations: 3, // an engaged attendee runs ~3 simulations
 };
 
 /**
@@ -30,9 +30,9 @@ export const BENCHMARKS = {
  * 50% trusted. Per-attendee rates are shrunk by this factor so a tiny event
  * where "both attendees engaged" can't post a perfect score off 2 data points.
  */
-export const CONFIDENCE_K = 20;
+export const CONFIDENCE_K = 6;
 /** Below this many attendees we flag the figures as not yet reliable. */
-export const LOW_DATA_THRESHOLD = 10;
+export const LOW_DATA_THRESHOLD = 5;
 
 export function confidenceFor(sampleSize: number): number {
   return sampleSize / (sampleSize + CONFIDENCE_K);
@@ -107,11 +107,18 @@ export function scoreEvents(
  * Aggregate scored events by region. Regional ROI is the new-user-weighted
  * average of member-event ROI scores (falls back to a plain average when a
  * region has no users yet), matching the "average ROI per region" requirement.
+ *
+ * `keyOf` selects the grouping granularity — defaults to region/country, but can
+ * group by city (or any other key) so finer-grained leaders aren't hidden inside
+ * a coarser bucket. The returned `region` field holds whatever key was used.
  */
-export function aggregateRegions(scored: ScoredEvent[]): RegionAnalytics[] {
+export function aggregateRegions(
+  scored: ScoredEvent[],
+  keyOf: (e: ScoredEvent) => string = (e) => e.region || e.country || "Unknown"
+): RegionAnalytics[] {
   const byRegion = new Map<string, ScoredEvent[]>();
   for (const ev of scored) {
-    const key = ev.region || ev.country || "Unknown";
+    const key = keyOf(ev);
     const list = byRegion.get(key) ?? [];
     list.push(ev);
     byRegion.set(key, list);

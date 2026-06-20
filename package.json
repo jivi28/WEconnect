@@ -6,7 +6,10 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "eslint .",
-    "start": "next start"
+    "start": "next start",
+    "scrape": "node scripts/scrape.mjs",
+    "seed": "node scripts/seed.mjs",
+    "seed:clear": "node scripts/seed.mjs --clear"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
