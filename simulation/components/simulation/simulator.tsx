@@ -14,6 +14,13 @@ import { useAuth } from "@/components/auth/auth-provider";
 import { getSupabase } from "@/lib/supabase/client";
 import { getWeekKey, getWeeklyProduct } from "@/lib/weekly/challenge";
 import { awardWeeklyPoint } from "@/lib/weekly/scores";
+import {
+  fetchSimulationCount,
+  recordSimulationCompletion,
+  type SavedSimulation,
+} from "@/lib/simulation/completions";
+import { LibraryPanel, refreshLibrary } from "./library-panel";
+import { SimulationViewer } from "./simulation-viewer";
 import { TopBar } from "./top-bar";
 import { IdeaInput } from "./idea-input";
 import { PuzzleWorkspace } from "./puzzle-workspace";
@@ -27,6 +34,7 @@ type ChallengeToast =
   | { type: "awarded"; points: number }
   | { type: "already" }
   | { type: "signin" }
+  | { type: "freedone" }
   | { type: "error"; message: string };
 
 type Step =
@@ -60,6 +68,10 @@ export function Simulator() {
   const [errorMessage, setErrorMessage] = useState("");
   const [serviceError, setServiceError] = useState(false);
   const [challengeToast, setChallengeToast] = useState<ChallengeToast | null>(null);
+  /** Guided simulations this account has completed — shown in the top bar. null = unknown/signed out. */
+  const [simCount, setSimCount] = useState<number | null>(null);
+  /** Saved build currently open in the read-only library viewer. */
+  const [viewing, setViewing] = useState<SavedSimulation | null>(null);
   const loadingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const aiRequest = useRef<AbortController | null>(null);
   /** Set while a weekly-challenge run is active; cleared for normal sims. */
@@ -76,6 +88,22 @@ export function Simulator() {
       aiRequest.current?.abort();
     };
   }, []);
+
+  // Load this account's completed-simulation total for the top-bar badge.
+  useEffect(() => {
+    const supabase = getSupabase();
+    if (!supabase || !user) {
+      setSimCount(null);
+      return;
+    }
+    let active = true;
+    fetchSimulationCount(supabase, user.id).then((n) => {
+      if (active) setSimCount(n);
+    });
+    return () => {
+      active = false;
+    };
+  }, [user]);
 
   const handleSubmit = useCallback(
     async (idea: string, options?: { challenge?: boolean }) => {
@@ -190,13 +218,30 @@ export function Simulator() {
 
   const handlePuzzleComplete = useCallback(async (mistakes: number) => {
     const ctx = challengeCtx.current;
-    if (!ctx) return; // not a weekly-challenge run
     if (!user) {
-      setChallengeToast({ type: "signin" });
+      // Only the weekly challenge nudges anonymous solvers to sign in.
+      if (ctx) setChallengeToast({ type: "signin" });
       return;
     }
     const supabase = getSupabase();
     if (!supabase) return;
+
+    // Every finished guided simulation counts toward the account total and is
+    // saved to the library — weekly challenge or not. Optimistic UI on success.
+    const product = ctx?.product ?? simulation?.productName ?? null;
+    void recordSimulationCompletion(supabase, user.id, {
+      product,
+      mode: ctx ? "challenge" : "guided",
+      title: simulation?.productName ?? product ?? "Simulation",
+      data: simulation,
+    }).then((ok) => {
+      if (ok) {
+        setSimCount((n) => (n ?? 0) + 1);
+        refreshLibrary();
+      }
+    });
+
+    if (!ctx) return; // not a weekly-challenge run — nothing more to score
     const durationMs = Date.now() - (ctx.startedAt ?? Date.now());
     const result = await awardWeeklyPoint(
       supabase,
@@ -214,6 +259,31 @@ export function Simulator() {
     } else {
       setChallengeToast({ type: "error", message: result.message });
     }
+  }, [user, simulation]);
+
+  const handleFreeBuildComplete = useCallback(async (chain: SimulationComponent[]) => {
+    if (!user) {
+      setChallengeToast({ type: "signin" });
+      return;
+    }
+    const supabase = getSupabase();
+    if (!supabase) return;
+    const ok = await recordSimulationCompletion(supabase, user.id, {
+      product: "Free build",
+      mode: "free",
+      title: `Free build · ${chain.length} part${chain.length === 1 ? "" : "s"}`,
+      data: { componentIds: chain.map((c) => c.id) },
+    });
+    if (ok) {
+      setSimCount((n) => (n ?? 0) + 1);
+      refreshLibrary();
+      setChallengeToast({ type: "freedone" });
+    } else {
+      setChallengeToast({
+        type: "error",
+        message: "Couldn't save your build. Please try again.",
+      });
+    }
   }, [user]);
 
   const handleFreeBuild = useCallback(() => {
@@ -221,6 +291,7 @@ export function Simulator() {
     if (loadingTimer.current) clearTimeout(loadingTimer.current);
     challengeCtx.current = null;
     setSimulation(null);
+    setChallengeToast(null);
     setStep("freeloading");
     loadingTimer.current = setTimeout(() => {
       setStep("freebuild");
@@ -245,6 +316,7 @@ export function Simulator() {
       <TopBar
         showReset={step === "workspace" || step === "freebuild"}
         onReset={handleReset}
+        simulationCount={simCount}
       />
 
       <div className="relative min-h-0 flex-1 overflow-hidden">
@@ -264,7 +336,8 @@ export function Simulator() {
                   weeklyProduct={weeklyProduct}
                 />
               </div>
-              <div className="hidden w-[320px] shrink-0 border-l border-line bg-canvas p-4 lg:flex">
+              <div className="hidden w-[340px] shrink-0 flex-col gap-3 border-l border-line bg-canvas p-4 lg:flex">
+                <LibraryPanel onOpen={setViewing} />
                 <LeaderboardPanel />
               </div>
             </motion.div>
@@ -407,7 +480,16 @@ export function Simulator() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             >
-              <FreeBuildWorkspace onExpand={setExpanded} />
+              <FreeBuildWorkspace
+                onExpand={setExpanded}
+                onComplete={handleFreeBuildComplete}
+              />
+              {challengeToast && (
+                <ChallengeToastBanner
+                  toast={challengeToast}
+                  onDismiss={() => setChallengeToast(null)}
+                />
+              )}
             </motion.div>
           )}
         </AnimatePresence>
@@ -419,6 +501,8 @@ export function Simulator() {
         productName={simulation?.productName}
         onClose={() => setExpanded(null)}
       />
+
+      <SimulationViewer saved={viewing} onClose={() => setViewing(null)} />
     </div>
   );
 }
@@ -439,9 +523,14 @@ const TOAST_COPY: Record<
     tone: "info",
   },
   signin: {
-    title: "Sign in to score",
-    body: "You solved it! Sign in from the start screen to earn weekly-challenge points.",
+    title: "Sign in to save",
+    body: "Nice build! Sign in from the start screen to save it to your account.",
     tone: "info",
+  },
+  freedone: {
+    title: "Build complete! ✅",
+    body: "Added to your completed simulations.",
+    tone: "good",
   },
   error: {
     title: "Couldn't save your point",

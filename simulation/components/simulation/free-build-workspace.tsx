@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import {
   IconArrowRight,
   IconArrowsMaximize,
+  IconCheck,
   IconPlus,
   IconRotateClockwise,
   IconTrash,
@@ -19,6 +20,9 @@ import { MovingDashedBorder } from "./moving-dashed-border";
 
 const EMPTY = new Set<string>();
 
+/** A free build needs at least one real connection before it counts as a sim. */
+const MIN_FREE_BUILD = 2;
+
 /**
  * Idea-agnostic "Free Build" mode. The full WEComponents/ catalogue is on the
  * left; the canvas is an open process chain. A part can be added only if it
@@ -28,14 +32,24 @@ const EMPTY = new Set<string>();
  */
 export function FreeBuildWorkspace({
   onExpand,
+  onComplete,
 }: {
   onExpand: (component: SimulationComponent) => void;
+  /** Called when the user marks the build done; receives the placed chain. */
+  onComplete?: (chain: SimulationComponent[]) => void;
 }) {
   const [selected, setSelected] = useState<SimulationComponent | null>(null);
   const [chain, setChain] = useState<SimulationComponent[]>([]);
   const [wrong, setWrong] = useState(false);
   const [reason, setReason] = useState<string | null>(null);
+  const [done, setDone] = useState(false);
   const wrongTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  function finish() {
+    if (done || chain.length < MIN_FREE_BUILD) return;
+    setDone(true);
+    onComplete?.(chain);
+  }
 
   function flashWrong(message: string) {
     if (wrongTimer.current) clearTimeout(wrongTimer.current);
@@ -67,6 +81,7 @@ export function FreeBuildWorkspace({
     setChain([]);
     setSelected(null);
     setReason(null);
+    setDone(false);
   }
 
   return (
@@ -110,6 +125,24 @@ export function FreeBuildWorkspace({
                 className="flex items-center gap-1.5 rounded-lg border border-[#ddd] bg-white px-3 py-2 text-xs font-medium text-[#555] transition-colors hover:border-[#CC0000] hover:text-[#CC0000] disabled:pointer-events-none disabled:opacity-40"
               >
                 <IconTrash size={15} /> Clear
+              </button>
+              <button
+                type="button"
+                onClick={finish}
+                disabled={done || chain.length < MIN_FREE_BUILD}
+                title={
+                  chain.length < MIN_FREE_BUILD
+                    ? `Place at least ${MIN_FREE_BUILD} connected components first`
+                    : "Mark this build complete"
+                }
+                className={cn(
+                  "flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold transition-colors disabled:pointer-events-none",
+                  done
+                    ? "border border-[#CC0000]/30 bg-[#fdecea] text-[#990000]"
+                    : "bg-[#CC0000] text-white hover:bg-[#b30000] disabled:opacity-40",
+                )}
+              >
+                <IconCheck size={15} /> {done ? "Completed" : "Done"}
               </button>
             </div>
           </div>
