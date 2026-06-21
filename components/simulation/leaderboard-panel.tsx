@@ -138,6 +138,13 @@ function Board() {
                   </p>
                   <p className="text-[10px] text-ink-faint">
                     avg {formatMs(row.avg_ms)}
+                    {row.total_mistakes > 0 && (
+                      <span className="text-we-red/80">
+                        {" · "}
+                        {row.total_mistakes} misplacement
+                        {row.total_mistakes === 1 ? "" : "s"}
+                      </span>
+                    )}
                   </p>
                 </div>
                 <span className="shrink-0 text-sm font-semibold text-ink">

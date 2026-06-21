@@ -59,6 +59,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [supabase]);
 
+  // Shared session bridge: when embedded in the WEconnect app (iframe), the
+  // parent posts its Supabase session so the simulator plays as the same logged-in
+  // user — no separate signup. We adopt it via setSession; localStorage can't be
+  // shared cross-origin (parent :5173, simulator :3001), so postMessage is required.
+  useEffect(() => {
+    if (!supabase || typeof window === "undefined" || window.parent === window) {
+      return;
+    }
+
+    async function onMessage(event: MessageEvent) {
+      const data = event.data;
+      if (!data || data.type !== "wc-session") return;
+      const { access_token, refresh_token } = data;
+      if (!access_token || !refresh_token) return;
+      await supabase!.auth.setSession({ access_token, refresh_token });
+    }
+
+    window.addEventListener("message", onMessage);
+    // Tell the parent we're ready to receive the session.
+    window.parent.postMessage({ type: "wc-ready" }, "*");
+
+    return () => window.removeEventListener("message", onMessage);
+  }, [supabase]);
+
   // Pull the student's real name from `profiles` (own row is readable under RLS).
   useEffect(() => {
     if (!supabase || !user) {

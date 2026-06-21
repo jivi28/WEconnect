@@ -189,7 +189,7 @@ export function Simulator() {
     handleSubmit(weeklyProduct, { challenge: true });
   }, [handleSubmit, weeklyProduct]);
 
-  const handlePuzzleComplete = useCallback(async () => {
+  const handlePuzzleComplete = useCallback(async (mistakes: number) => {
     const ctx = challengeCtx.current;
     if (!ctx) return; // not a weekly-challenge run
     if (!user) {
@@ -205,6 +205,7 @@ export function Simulator() {
       ctx.weekKey,
       ctx.product,
       durationMs,
+      mistakes,
     );
     if (result.status === "awarded") {
       setChallengeToast({ type: "awarded" });
