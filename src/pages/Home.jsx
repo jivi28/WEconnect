@@ -24,7 +24,8 @@ export default function Home() {
   const tabs = [
     ...BASE_TABS,
     ...(isWurthEmployee ? [] : [{ id: 'projects', label: 'Projects' }]),
-    ...(isWurthEmployee ? [{ id: 'analysis', label: 'Analysis' }] : [])
+    ...(isWurthEmployee ? [{ id: 'analysis', label: 'Analysis' }] : []),
+    { id: 'simulation', label: 'Simulation' }
   ]
 
   return (
@@ -66,6 +67,7 @@ export default function Home() {
         {tab === 'events' && <EventsTab />}
         {tab === 'projects' && !isWurthEmployee && <ProjectsTab />}
         {tab === 'analysis' && isWurthEmployee && <AnalysisTab />}
+        {tab === 'simulation' && <SimulationTab />}
       </main>
     </div>
   )
@@ -80,6 +82,30 @@ function AnalysisTab() {
     <iframe
       src="http://localhost:3000"
       title="WEconnect Event ROI Analysis"
+      style={{
+        width: '100%',
+        height: 'calc(100vh - 160px)',
+        border: 'none',
+        borderRadius: '12px',
+        background: 'white'
+      }}
+    />
+  )
+}
+
+// The Innovation Simulator is a standalone Next.js app (simulation/, vendored
+// from origin/simulation) — embedded by URL rather than ported into this Vite
+// app, since it depends on Next's App Router/server routes (Gemini component
+// selection) plus React 19 + Tailwind v4 + react-three-fiber. It runs on port
+// 3001 (see simulation/package.json) so it doesn't clash with the Analysis app
+// on 3000. Its root redirects to /simulation, so the iframe lands on the full
+// simulator.
+function SimulationTab() {
+  const src = import.meta.env.VITE_SIMULATION_URL || 'http://localhost:3001'
+  return (
+    <iframe
+      src={src}
+      title="WEconnect Innovation Simulator"
       style={{
         width: '100%',
         height: 'calc(100vh - 160px)',

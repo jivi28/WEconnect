@@ -30,6 +30,24 @@ npm run dev
 
 Opens at `http://localhost:5173`.
 
+### Running the embedded module apps
+
+The **Analysis** and **Simulation** sections in the top menu are standalone Next.js
+apps embedded by iframe (see "How the section tabs work" below). To use those tabs,
+run their dev servers alongside this Vite app — each in its own terminal:
+
+```bash
+# Analysis section  → http://localhost:3000
+cd analysis-dashboard && npm install && npm run dev
+
+# Simulation section → http://localhost:3001
+cd simulation && npm install && npm run dev
+```
+
+The Simulation app is pinned to port 3001 (`simulation/package.json`) so it doesn't
+clash with Analysis on 3000. Override the URL the iframe points at with
+`VITE_SIMULATION_URL` if you host it elsewhere.
+
 ## Data model
 
 ```
@@ -52,9 +70,22 @@ connections         (a request between two users)
 
 This is the schema your teammates' **Analysis** and **Simulation** modules will likely want to read from too (e.g. analysis on who's looking for what, simulations involving the connection graph) — worth syncing with them before you change table/column names.
 
-## Where your teammates plug in
+## How the section tabs work
 
-In `src/pages/Home.jsx`, the `analysis` and `simulation` tabs currently render a placeholder. Swap `<Placeholder name="Analysis" />` and `<Placeholder name="Simulation" />` for their components once their branches are ready to merge.
+The top header menu lives in `src/pages/Home.jsx`. Each entry in the `tabs` array is a
+button that switches a local `tab` state; the matching component renders below in
+`<main>`. The first‑party sections (Profile, Network, Events, Projects) are React
+components in `src/pages/`.
+
+Two sections are teammates' standalone **Next.js** apps, vendored into this repo and
+embedded by iframe rather than ported into the Vite app (they rely on Next's App
+Router/server routes and a separate React 19 + Tailwind v4 toolchain):
+
+- **Analysis** (`analysis-dashboard/`, wurth‑employee only) → iframes `http://localhost:3000` via `AnalysisTab`.
+- **Simulation** (`simulation/`, all users) → iframes `http://localhost:3001` via `SimulationTab` (the simulation app's `/` redirects to the full simulator).
+
+To add another module, drop its app into a folder, give it a unique dev port, and add a
+`{ id, label }` to `tabs` plus an iframe component following `SimulationTab`.
 
 ## Notes / next steps
 
