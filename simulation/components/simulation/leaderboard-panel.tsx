@@ -1,10 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, Trophy, UserCircle2 } from "lucide-react";
+import { Loader2, Mail, Trophy, UserCircle2 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { getSupabase } from "@/lib/supabase/client";
-import { fetchLeaderboard, type LeaderboardRow } from "@/lib/weekly/scores";
+import {
+  fetchContacts,
+  fetchLeaderboard,
+  type ContactInfo,
+  type LeaderboardRow,
+  type LeaderboardScope,
+} from "@/lib/weekly/scores";
 
 const REFRESH_EVENT = "wc:refresh-leaderboard";
 
@@ -52,21 +58,31 @@ function SignedInBadge() {
 /* ------------------------------------------------------------------ */
 
 function Board() {
-  const { user } = useAuth();
+  const { user, profileRole } = useAuth();
+  const isEmployee = profileRole === "wurth_employee";
+  const [scope, setScope] = useState<LeaderboardScope>("students");
   const [rows, setRows] = useState<LeaderboardRow[]>([]);
+  const [contacts, setContacts] = useState<Map<string, ContactInfo>>(new Map());
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
     const supabase = getSupabase();
     if (!supabase) return;
     try {
-      setRows(await fetchLeaderboard(supabase));
+      const next = await fetchLeaderboard(supabase, scope);
+      setRows(next);
+      // Employees can see who's who + reach out; students never fetch PII.
+      if (isEmployee) {
+        setContacts(await fetchContacts(supabase, next.map((r) => r.user_id)));
+      } else {
+        setContacts(new Map());
+      }
     } catch {
       /* leave previous rows on transient error */
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [scope, isEmployee]);
 
   useEffect(() => {
     load();
@@ -94,9 +110,20 @@ function Board() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col rounded-xl border border-line bg-card">
-      <div className="flex items-center gap-2 border-b border-line px-3.5 py-3 text-ink">
-        <Trophy size={15} className="text-we-red" />
-        <span className="text-sm font-semibold">Weekly Leaderboard</span>
+      <div className="flex items-center justify-between gap-2 border-b border-line px-3.5 py-3 text-ink">
+        <div className="flex items-center gap-2">
+          <Trophy size={15} className="text-we-red" />
+          <span className="text-sm font-semibold">Weekly Leaderboard</span>
+        </div>
+        <select
+          aria-label="Leaderboard scope"
+          value={scope}
+          onChange={(e) => setScope(e.target.value as LeaderboardScope)}
+          className="rounded-md border border-line bg-panel px-2 py-1 text-[11px] font-medium text-ink-muted focus:border-we-red focus:outline-none"
+        >
+          <option value="students">Students</option>
+          <option value="all">Everyone</option>
+        </select>
       </div>
 
       <div className="min-h-0 flex-1 overflow-y-auto px-1.5 py-1.5">
@@ -111,6 +138,7 @@ function Board() {
         ) : (
           rows.map((row, i) => {
             const me = row.user_id === user?.id;
+            const contact = contacts.get(row.user_id);
             return (
               <div
                 key={row.user_id}
@@ -132,10 +160,22 @@ function Board() {
                   {i + 1}
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm text-ink">
-                    {row.display_name}
-                    {me && <span className="ml-1 text-[10px] text-we-red">(you)</span>}
-                  </p>
+                  {/* Employees see the real name (primary) + @handle; everyone
+                      else only ever sees the username. */}
+                  {contact?.name ? (
+                    <p className="truncate text-sm text-ink">
+                      {contact.name}
+                      <span className="ml-1 text-[11px] font-normal text-ink-faint">
+                        @{row.username}
+                      </span>
+                      {me && <span className="ml-1 text-[10px] text-we-red">(you)</span>}
+                    </p>
+                  ) : (
+                    <p className="truncate text-sm text-ink">
+                      @{row.username}
+                      {me && <span className="ml-1 text-[10px] text-we-red">(you)</span>}
+                    </p>
+                  )}
                   <p className="text-[10px] text-ink-faint">
                     avg {formatMs(row.avg_ms)}
                     {row.total_mistakes > 0 && (
@@ -144,6 +184,14 @@ function Board() {
                         {row.total_mistakes} misplacement
                         {row.total_mistakes === 1 ? "" : "s"}
                       </span>
+                    )}
+                    {contact?.email && (
+                      <a
+                        href={`mailto:${contact.email}`}
+                        className="ml-1.5 inline-flex items-center gap-0.5 text-we-red hover:underline"
+                      >
+                        <Mail size={10} /> Contact
+                      </a>
                     )}
                   </p>
                 </div>

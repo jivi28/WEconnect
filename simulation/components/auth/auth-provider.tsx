@@ -19,6 +19,8 @@ interface AuthContextValue {
   user: User | null;
   /** Display name from the canonical `profiles` table (falls back to email prefix). */
   profileName: string | null;
+  /** Role from `profiles` ('student' | 'educator' | 'wurth_employee'), null until loaded. */
+  profileRole: string | null;
   /** Sign in with email/password. Used only by the dev-only sign-in in development. */
   signIn: (email: string, password: string) => Promise<AuthResult>;
   signOut: () => Promise<void>;
@@ -36,6 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(!configured);
   const [user, setUser] = useState<User | null>(null);
   const [profileName, setProfileName] = useState<string | null>(null);
+  const [profileRole, setProfileRole] = useState<string | null>(null);
 
   useEffect(() => {
     if (!supabase) return;
@@ -83,22 +86,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("message", onMessage);
   }, [supabase]);
 
-  // Pull the student's real name from `profiles` (own row is readable under RLS).
+  // Pull the viewer's own name + role from `profiles` (own row is readable under RLS).
   useEffect(() => {
     if (!supabase || !user) {
       setProfileName(null);
+      setProfileRole(null);
       return;
     }
     let active = true;
     supabase
       .from("profiles")
-      .select("name")
+      .select("name, role")
       .eq("id", user.id)
       .maybeSingle()
-      .then(({ data }: { data: { name: string | null } | null }) => {
-        if (!active) return;
-        setProfileName(data?.name?.trim() || emailPrefix(user));
-      });
+      .then(
+        ({
+          data,
+        }: {
+          data: { name: string | null; role: string | null } | null;
+        }) => {
+          if (!active) return;
+          setProfileName(data?.name?.trim() || emailPrefix(user));
+          setProfileRole(data?.role ?? null);
+        },
+      );
     return () => {
       active = false;
     };
@@ -124,10 +135,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       configured,
       user,
       profileName: profileName ?? emailPrefix(user),
+      profileRole,
       signIn,
       signOut,
     }),
-    [ready, configured, user, profileName, signIn, signOut],
+    [ready, configured, user, profileName, profileRole, signIn, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
