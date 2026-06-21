@@ -24,7 +24,7 @@ import { WeLogo } from "./we-logo";
 import { LeaderboardPanel, refreshLeaderboard } from "./leaderboard-panel";
 
 type ChallengeToast =
-  | { type: "awarded" }
+  | { type: "awarded"; points: number }
   | { type: "already" }
   | { type: "signin" }
   | { type: "error"; message: string };
@@ -207,7 +207,7 @@ export function Simulator() {
       mistakes,
     );
     if (result.status === "awarded") {
-      setChallengeToast({ type: "awarded" });
+      setChallengeToast({ type: "awarded", points: result.points });
       refreshLeaderboard();
     } else if (result.status === "already") {
       setChallengeToast({ type: "already" });
@@ -428,13 +428,14 @@ const TOAST_COPY: Record<
   { title: string; body: string; tone: "good" | "info" }
 > = {
   awarded: {
-    title: "Challenge complete — +1 point! 🏆",
-    body: "Your point has been added to the leaderboard.",
+    // Overridden at render with the actual score (see ChallengeToastBanner).
+    title: "Challenge complete! 🏆",
+    body: "Your score has been added to the leaderboard.",
     tone: "good",
   },
   already: {
     title: "Nicely done!",
-    body: "You already earned this week's point — come back next week for a new product.",
+    body: "You already scored this week — come back next week for a new product.",
     tone: "info",
   },
   signin: {
@@ -456,7 +457,14 @@ function ChallengeToastBanner({
   toast: ChallengeToast;
   onDismiss: () => void;
 }) {
-  const copy = TOAST_COPY[toast.type];
+  const copy =
+    toast.type === "awarded"
+      ? {
+          title: `Challenge complete — +${toast.points} points! 🏆`,
+          body: "Your score has been added to the leaderboard.",
+          tone: "good" as const,
+        }
+      : TOAST_COPY[toast.type];
   return (
     <motion.div
       initial={{ opacity: 0, y: 24, x: "-50%" }}
