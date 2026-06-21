@@ -18,18 +18,21 @@ export function DevSignIn() {
   const [error, setError] = useState<string | null>(null);
 
   if (process.env.NODE_ENV !== "development") return null;
+  // Never show inside the WEconnect app (embedded via iframe) — there the
+  // parent shares its session, so this standalone-only helper is redundant.
+  if (typeof window !== "undefined" && window.parent !== window) return null;
   if (!configured || !ready) return null;
 
   // Signed in → offer a sign-out so you can switch accounts while testing.
   if (user) {
     return (
-      <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 rounded-full border border-line bg-[#161616] px-3 py-1.5 text-[11px] text-[#888] shadow-lg">
+      <div className="fixed bottom-4 left-4 z-50 flex items-center gap-2 rounded-full border border-line bg-panel px-3 py-1.5 text-[11px] text-ink-muted shadow-lg">
         <Wrench size={12} />
         <span className="max-w-[140px] truncate text-ink">{profileName}</span>
         <button
           type="button"
           onClick={() => signOut()}
-          className="flex items-center gap-1 rounded-full border border-line px-2 py-0.5 text-[#aaa] transition-colors hover:border-we-red hover:text-white"
+          className="flex items-center gap-1 rounded-full border border-line px-2 py-0.5 text-ink-muted transition-colors hover:border-we-red hover:text-we-red"
         >
           <LogOut size={11} /> Sign out
         </button>
@@ -52,9 +55,9 @@ export function DevSignIn() {
       {open ? (
         <form
           onSubmit={submit}
-          className="w-64 rounded-xl border border-line bg-[#161616] p-3 shadow-2xl"
+          className="w-64 rounded-xl border border-line bg-panel p-3 shadow-2xl"
         >
-          <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold text-[#888]">
+          <div className="mb-2 flex items-center gap-1.5 text-[11px] font-semibold text-ink-muted">
             <Wrench size={12} /> Dev sign-in (local only)
           </div>
           <input
@@ -86,7 +89,7 @@ export function DevSignIn() {
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="rounded-md border border-line px-2.5 py-1.5 text-xs text-[#888] hover:text-white"
+              className="rounded-md border border-line px-2.5 py-1.5 text-xs text-ink-muted hover:text-ink"
             >
               ✕
             </button>
@@ -96,7 +99,7 @@ export function DevSignIn() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="flex items-center gap-1.5 rounded-full border border-line bg-[#161616] px-3 py-1.5 text-[11px] text-[#888] shadow-lg hover:text-white"
+          className="flex items-center gap-1.5 rounded-full border border-line bg-panel px-3 py-1.5 text-[11px] text-ink-muted shadow-lg hover:text-ink"
         >
           <Wrench size={12} /> Dev sign-in
         </button>

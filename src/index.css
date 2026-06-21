@@ -582,6 +582,13 @@ textarea {
   background: linear-gradient(180deg, var(--we-gray-50) 0%, var(--paper) 100%);
 }
 
+/* The Simulation tab embeds a full-screen iframe — let it run edge to edge
+   (no page padding/gradient) so it isn't boxed in and condensed. */
+.main--flush {
+  padding: 0;
+  background: none;
+}
+
 .panel {
   max-width: 760px;
 }

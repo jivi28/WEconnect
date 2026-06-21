@@ -13,7 +13,7 @@ export function TopBar({
 }) {
   return (
     <header
-      className="flex h-[76px] shrink-0 items-center justify-between bg-[#0d0d0d] px-6"
+      className="flex h-[76px] shrink-0 items-center justify-between bg-panel px-6"
       style={{ borderBottom: "1px solid #CC0000" }}
     >
       <div className="flex items-center gap-4">

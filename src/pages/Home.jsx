@@ -62,7 +62,7 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="main">
+      <main className={`main ${tab === 'simulation' ? 'main--flush' : ''}`}>
         {tab === 'profile' && <Profile onNavigate={setTab} />}
         {tab === 'network' && <Network />}
         {tab === 'events' && <EventsTab />}
@@ -165,11 +165,11 @@ function SimulationTab() {
         })
       }}
       style={{
+        display: 'block',
         width: '100%',
-        height: 'calc(100vh - 140px)',
+        height: 'calc(100vh - 72px)',
         border: 'none',
-        borderRadius: '12px',
-        background: '#0f0f0f'
+        background: '#f7f7f5'
       }}
     />
   )

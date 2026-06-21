@@ -97,7 +97,7 @@ export function IdeaInput({
         <button
           type="button"
           onClick={onWeeklyChallenge}
-          className="group mt-4 flex w-full items-center gap-3 rounded-lg border border-we-red/50 bg-gradient-to-r from-[#1a0000] to-card px-4 py-3 text-left transition-colors hover:border-we-red"
+          className="group mt-4 flex w-full items-center gap-3 rounded-lg border border-we-red/40 bg-gradient-to-r from-[#fdecea] to-card px-4 py-3 text-left transition-colors hover:border-we-red"
         >
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-we-red/15 text-we-red">
             <Trophy size={18} />
@@ -105,7 +105,7 @@ export function IdeaInput({
           <span className="min-w-0 flex-1">
             <span className="flex items-center gap-2 text-sm font-semibold text-ink">
               Weekly Challenge
-              <span className="rounded-full bg-we-red/20 px-2 py-0.5 text-[10px] font-medium text-[#ffb3b3]">
+              <span className="rounded-full bg-we-red/15 px-2 py-0.5 text-[10px] font-medium text-we-red">
                 Earn a point
               </span>
             </span>

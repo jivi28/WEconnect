@@ -57,9 +57,9 @@ export function ComponentLibrary({
   const isFreeBuild = mode === "freebuild";
 
   return (
-    <aside className="flex h-full w-[340px] shrink-0 flex-col border-r border-[#2a2a2a] bg-[#141414] shadow-[12px_0_30px_rgba(0,0,0,0.08)]">
-      <header className="shrink-0 border-b border-[#2a2a2a] p-4">
-        <h2 className="text-base font-semibold tracking-tight text-white">Components</h2>
+    <aside className="flex h-full w-[340px] shrink-0 flex-col border-r border-[#e2e2e2] bg-white shadow-[12px_0_30px_rgba(0,0,0,0.05)]">
+      <header className="shrink-0 border-b border-[#e2e2e2] p-4">
+        <h2 className="text-base font-semibold tracking-tight text-[#1a1a1a]">Components</h2>
         <p className="mt-1 text-xs text-[#888]">
           {isFreeBuild
             ? "Drag a part into the build area"
@@ -71,7 +71,7 @@ export function ComponentLibrary({
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search components..."
-          className="mt-3 w-full rounded-xl border border-[#333] bg-[#1a1a1a] px-3 py-2.5 text-[13px] text-white shadow-inner placeholder:text-[#666] focus:border-[#CC0000] focus:outline-none focus:ring-2 focus:ring-[#CC0000]/20"
+          className="mt-3 w-full rounded-xl border border-[#ddd] bg-[#f6f6f6] px-3 py-2.5 text-[13px] text-[#1a1a1a] placeholder:text-[#999] focus:border-[#CC0000] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#CC0000]/20"
         />
 
         <div className="mt-3 flex flex-wrap gap-1.5">
@@ -83,10 +83,10 @@ export function ComponentLibrary({
                 type="button"
                 onClick={() => setActiveCategory(category)}
                 className={cn(
-                  "rounded-full border border-[#3a3a3a] px-2.5 py-1 text-[10px] font-medium transition-colors",
+                  "rounded-full border border-[#ddd] px-2.5 py-1 text-[10px] font-medium transition-colors",
                   active
                     ? "border-[#CC0000] bg-[#CC0000] text-white"
-                    : "bg-transparent text-white hover:border-[#CC0000]",
+                    : "bg-transparent text-[#555] hover:border-[#CC0000] hover:text-[#CC0000]",
                 )}
               >
                 {category}
@@ -142,10 +142,10 @@ export function ComponentLibrary({
                 }
               }}
               className={cn(
-                "mb-2 flex w-full items-center gap-3 rounded-xl border bg-[#1e1e1e] p-3 text-left transition-colors",
+                "mb-2 flex w-full items-center gap-3 rounded-xl border bg-white p-3 text-left transition-colors shadow-sm",
                 active
-                  ? "border-[#CC0000] bg-[#1a0000]"
-                  : "border-[#2a2a2a] hover:border-[#CC0000]",
+                  ? "border-[#CC0000] bg-[#fdecea]"
+                  : "border-[#e2e2e2] hover:border-[#CC0000]",
                 used && "pointer-events-none cursor-not-allowed opacity-30 grayscale",
               )}
             >
@@ -183,7 +183,7 @@ export function ComponentLibrary({
               </div>
 
               <div className="min-w-0 flex-1">
-                <p className="break-words text-sm leading-snug font-semibold text-white">
+                <p className="break-words text-sm leading-snug font-semibold text-[#1a1a1a]">
                   {component.name}
                 </p>
                 <span className="mt-2 inline-flex rounded-full bg-[#CC0000] px-2 py-1 text-[10px] leading-none text-white">
