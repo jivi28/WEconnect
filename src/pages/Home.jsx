@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
+import weConnectLogo from '../assets/we-connect-logo.png'
 import Profile from './Profile'
 import Network from './Network'
 import EventsTab from './EventsTab'
@@ -32,9 +33,19 @@ export default function Home() {
   return (
     <div className="shell">
       <header className="topbar">
-        <p className="we-wordmark" style={{ margin: 0 }}>
-          WE<span>connect</span>
-        </p>
+        <button
+          type="button"
+          onClick={() => setTab('profile')}
+          aria-label="Go to home"
+          title="Home"
+          style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', lineHeight: 0 }}
+        >
+          <img
+            src={weConnectLogo}
+            alt="WE Connect"
+            style={{ height: 34, width: 'auto', display: 'block' }}
+          />
+        </button>
 
         <nav className="topbar-nav">
           {tabs.map((t) => (

@@ -1,6 +1,7 @@
 import Avatar from './Avatar'
 import ArrowButton from './ArrowButton'
 import type { CurrentUser } from '../types'
+import weConnectLogo from '../../assets/we-connect-logo.png'
 
 const NAV_ITEMS = ['Network', 'Interests']
 
@@ -15,17 +16,12 @@ export default function Header({ currentUser, activeNav, onNavChange }: HeaderPr
     <header className="sticky top-0 z-30 bg-ink">
       <div className="mx-auto flex h-16 max-w-[1440px] items-center justify-between gap-6 px-6">
         <div className="flex items-center gap-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center bg-brand-red text-[13px] font-extrabold tracking-tight text-white">
-            WE
+          <span className="flex shrink-0 items-center rounded-md bg-white px-2.5 py-1.5">
+            <img src={weConnectLogo} alt="WE Connect" className="h-6 w-auto" />
           </span>
-          <div className="hidden leading-tight sm:block">
-            <p className="text-[14px] font-extrabold uppercase tracking-tight text-white">
-              Würth Elektronik <span className="text-brand-red">Connect</span>
-            </p>
-            <p className="text-[10px] font-medium uppercase tracking-[0.16em] text-graymed">
-              Connection Network
-            </p>
-          </div>
+          <p className="hidden text-[10px] font-medium uppercase tracking-[0.16em] text-graymed sm:block">
+            Connection Network
+          </p>
         </div>
 
         <div className="hidden max-w-md flex-1 items-center rounded-sm bg-white/10 px-3 py-2 lg:flex">

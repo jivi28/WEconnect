@@ -757,9 +757,20 @@ textarea {
 
 .map-embed-frame {
   width: 100%;
-  height: calc(100vh - 150px);
+  height: calc(100vh - 110px);
   border: none;
   display: block;
+}
+
+/* "Redo map" floats in the map's top-left corner instead of a full header row,
+   so the connection map sits higher and fills more of the tab. */
+.map-redo-btn {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 5;
+  padding: 0.32rem 0.72rem;
+  font-size: 0.8rem;
 }
 
 .map-embed-hint {

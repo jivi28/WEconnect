@@ -348,9 +348,7 @@ export function CRMDashboard() {
           <div className="flex flex-col gap-3 sm:grid sm:grid-cols-[1fr_auto_1fr] sm:items-center w-full">
             <div>
               <h1 className="text-xl font-black tracking-tight">
-                <span className="text-[#e93037]">WE</span>
-                <span className="text-[#1d252d]">connect</span>
-                <span className="text-[#1d252d]/70 font-bold"> · Event ROI</span>
+                <span className="text-[#1d252d]">Event ROI</span>
               </h1>
               <p className="text-[#1d252d]/60 text-sm font-medium">Würth Electronics student-connection analytics</p>
             </div>
@@ -469,14 +467,14 @@ export function CRMDashboard() {
                         <div className="flex items-center gap-1 mb-3">
                           <h4 className="text-sm font-black text-[#1d252d]">Engagement funnel</h4>
                           <InfoButton label="Engagement funnel">
-                            Each step shows how many of the people from the step above continued to the next action. The percentage is this step ÷ the step above it (e.g. of everyone who joined, how many went on to connect). The bar length shows the share of all signups.
+                            The first step is everyone who joined the platform via this event. Each later step's percentage is that step ÷ the people who joined the platform (e.g. of everyone who joined, how many a recruiter connected with, and how many ran a simulation). The bar length shows the share of all signups.
                           </InfoButton>
                         </div>
                         <div className="space-y-2">
                           {buildFunnel(selectedEvent).map((s, i) => {
-                            // Funnel is a fixed 3-step sequence; name the previous step in plain
-                            // English instead of the jargony "of prev".
-                            const convPhrase = ["", "of those who joined", "of those who connected"]
+                            // Funnel is a fixed 3-step sequence; the later steps are both
+                            // measured against the people who joined the platform.
+                            const convPhrase = ["", "of those who joined platform", "of those who joined platform"]
                             return (
                             <div key={s.label}>
                               <div className="flex items-baseline justify-between text-xs">

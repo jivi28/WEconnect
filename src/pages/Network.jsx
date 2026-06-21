@@ -194,24 +194,25 @@ export default function Network() {
   }
 
   return (
-    <div>
-      <div className="card-actions" style={{ marginBottom: '0.75rem' }}>
-        <button className="btn-secondary" onClick={() => setEditing(true)}>
-          Redo map
-        </button>
-        <span className="muted" style={{ fontSize: '0.85rem' }}>
-          Redo your map if you want to change your interests.
-        </span>
-      </div>
-      <div className="map-embed" ref={mapWrapperRef} onClick={() => setMapActive(true)}>
-        <iframe
-          src="/mindmap.html?embedded=1"
-          title="Network graph"
-          className="map-embed-frame"
-          style={{ pointerEvents: mapActive ? 'auto' : 'none' }}
-        />
-        {!mapActive && <div className="map-embed-hint">Click to interact with the map</div>}
-      </div>
+    <div className="map-embed" ref={mapWrapperRef} onClick={() => setMapActive(true)}>
+      <button
+        type="button"
+        className="btn-secondary map-redo-btn"
+        title="Redo your map to change your interests"
+        onClick={(event) => {
+          event.stopPropagation()
+          setEditing(true)
+        }}
+      >
+        Redo map
+      </button>
+      <iframe
+        src="/mindmap.html?embedded=1"
+        title="Network graph"
+        className="map-embed-frame"
+        style={{ pointerEvents: mapActive ? 'auto' : 'none' }}
+      />
+      {!mapActive && <div className="map-embed-hint">Click to interact with the map</div>}
     </div>
   )
 }

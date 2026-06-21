@@ -21,7 +21,7 @@ import {
 } from "@/lib/simulation/completions";
 import { LibraryPanel, refreshLibrary } from "./library-panel";
 import { SimulationViewer } from "./simulation-viewer";
-import { TopBar } from "./top-bar";
+import { TopBar, SimCountBadge } from "./top-bar";
 import { IdeaInput } from "./idea-input";
 import { PuzzleWorkspace } from "./puzzle-workspace";
 import { FreeBuildWorkspace } from "./free-build-workspace";
@@ -313,11 +313,12 @@ export function Simulator() {
   return (
     <div className="flex h-dvh flex-col overflow-hidden bg-canvas">
       <GlassSVGFilter />
-      <TopBar
-        showReset={step === "workspace" || step === "freebuild"}
-        onReset={handleReset}
-        simulationCount={simCount}
-      />
+      {/* The bar only appears once you're building (it holds Reset); the start
+          screen stays clean and the idea form fills the full height. The
+          completed-simulations count lives in the start-screen side panel. */}
+      {(step === "workspace" || step === "freebuild") && (
+        <TopBar showReset onReset={handleReset} simulationCount={simCount} />
+      )}
 
       <div className="relative min-h-0 flex-1 overflow-hidden">
         <AnimatePresence mode="wait">
@@ -337,6 +338,7 @@ export function Simulator() {
                 />
               </div>
               <div className="hidden w-[340px] shrink-0 flex-col gap-3 border-l border-line bg-canvas p-4 lg:flex">
+                {typeof simCount === "number" && <SimCountBadge count={simCount} />}
                 <LibraryPanel onOpen={setViewing} />
                 <LeaderboardPanel />
               </div>

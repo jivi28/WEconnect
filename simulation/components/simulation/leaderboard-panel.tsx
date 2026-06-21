@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Loader2, Mail, Trophy, UserCircle2 } from "lucide-react";
+import { Check, Copy, Loader2, Mail, Trophy, UserCircle2 } from "lucide-react";
 import { useAuth } from "@/components/auth/auth-provider";
 import { getSupabase } from "@/lib/supabase/client";
+import { copyStudentEmail } from "@/lib/simulation/copyEmail";
 import {
   fetchContacts,
   fetchLeaderboard,
@@ -186,12 +187,18 @@ function Board() {
                       </span>
                     )}
                     {contact?.email && (
-                      <a
-                        href={`mailto:${contact.email}`}
-                        className="ml-1.5 inline-flex items-center gap-0.5 text-we-red hover:underline"
-                      >
-                        <Mail size={10} /> Contact
-                      </a>
+                      <>
+                        <a
+                          href={`mailto:${contact.email}`}
+                          className="ml-1.5 inline-flex items-center gap-0.5 text-we-red hover:underline"
+                        >
+                          <Mail size={10} /> Contact
+                        </a>
+                        <CopyContactButton
+                          email={contact.email}
+                          studentId={row.user_id}
+                        />
+                      </>
                     )}
                   </p>
                 </div>
@@ -216,5 +223,39 @@ function Board() {
         </p>
       </div>
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+
+/** Copy a student's email; the copy is logged as a connection (employees only). */
+function CopyContactButton({
+  email,
+  studentId,
+}: {
+  email: string;
+  studentId: string;
+}) {
+  const { user } = useAuth();
+  const [copied, setCopied] = useState(false);
+
+  async function onCopy() {
+    const supabase = getSupabase();
+    if (!supabase || !user) return;
+    await copyStudentEmail(supabase, user.id, { email, studentId });
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={onCopy}
+      title="Copy email"
+      className="ml-1 inline-flex items-center gap-0.5 text-we-red hover:underline"
+    >
+      {copied ? <Check size={10} /> : <Copy size={10} />}
+      {copied ? "Copied" : "Copy"}
+    </button>
   );
 }

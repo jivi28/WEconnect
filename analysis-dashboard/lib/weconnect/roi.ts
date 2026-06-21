@@ -157,15 +157,18 @@ export function aggregateRegions(
 }
 
 /**
- * Post-signup engagement funnel for one event: how many of the people who joined
- * the platform via this event went on to connect, then to run a simulation.
+ * Post-signup engagement funnel for one event: of the people who joined the
+ * platform via this event, how many a recruiter connected with (copied their
+ * contact) and how many ran a simulation. Both later stages are measured
+ * against the people who joined the platform (not against each other), since a
+ * student can run a simulation without anyone having copied their contact.
  * Uses distinct user counts (not totals) so each stage is a real subset of the
- * previous one.
+ * signups.
  */
 export function buildFunnel(event: ScoredEvent): FunnelStep[] {
   const signups = event.new_users;
   const connected = Math.min(signups, event.users_connected);
-  const simulated = Math.min(connected, event.users_simulated);
+  const simulated = Math.min(signups, event.users_simulated);
 
   const step = (label: string, value: number, prev: number): FunnelStep => ({
     label,
@@ -175,9 +178,9 @@ export function buildFunnel(event: ScoredEvent): FunnelStep[] {
   });
 
   return [
-    step("Joined via event", signups, signups),
+    step("Joined platform via event", signups, signups),
     step("Made a connection", connected, signups),
-    step("Ran a simulation", simulated, connected),
+    step("Ran a simulation", simulated, signups),
   ];
 }
 
