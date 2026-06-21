@@ -62,7 +62,11 @@ export default function Home() {
         </div>
       </header>
 
-      <main className={`main ${tab === 'simulation' ? 'main--flush' : ''}`}>
+      <main
+        className={`main ${
+          tab === 'simulation' || tab === 'analysis' ? 'main--flush' : ''
+        } ${tab === 'network' ? 'main--tight' : ''}`}
+      >
         {tab === 'profile' && <Profile onNavigate={setTab} />}
         {tab === 'network' && <Network />}
         {tab === 'events' && <EventsTab />}
@@ -84,11 +88,11 @@ function AnalysisTab() {
       src="http://localhost:3000"
       title="WEconnect Event Analytics"
       style={{
+        display: 'block',
         width: '100%',
-        height: 'calc(100vh - 160px)',
+        height: 'calc(100vh - 72px)',
         border: 'none',
-        borderRadius: '12px',
-        background: 'white'
+        background: '#f7f7f5'
       }}
     />
   )

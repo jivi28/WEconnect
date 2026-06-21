@@ -582,11 +582,17 @@ textarea {
   background: linear-gradient(180deg, var(--we-gray-50) 0%, var(--paper) 100%);
 }
 
-/* The Simulation tab embeds a full-screen iframe — let it run edge to edge
-   (no page padding/gradient) so it isn't boxed in and condensed. */
+/* The Simulation / Event Analytics tabs embed a full-screen iframe — let them
+   run edge to edge (no page padding/gradient) so they aren't boxed in. */
 .main--flush {
   padding: 0;
   background: none;
+}
+
+/* The Network tab keeps a slim controls row but gives its connection map most
+   of the viewport — trim the page padding so the map fills under the toolbar. */
+.main--tight {
+  padding: 1rem 1.5rem;
 }
 
 .panel {
@@ -751,7 +757,7 @@ textarea {
 
 .map-embed-frame {
   width: 100%;
-  height: calc(100vh - 220px);
+  height: calc(100vh - 150px);
   border: none;
   display: block;
 }

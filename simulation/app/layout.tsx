@@ -19,9 +19,12 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // suppressHydrationWarning: browser extensions (e.g. SwiftRead) inject
+  // attributes on <html>/<body> before React hydrates, which would otherwise
+  // trip a hydration mismatch.
   return (
-    <html lang="en" className={`${inter.variable} h-full`}>
-      <body className="min-h-full antialiased">{children}</body>
+    <html lang="en" suppressHydrationWarning className={`${inter.variable} h-full`}>
+      <body suppressHydrationWarning className="min-h-full antialiased">{children}</body>
     </html>
   );
 }

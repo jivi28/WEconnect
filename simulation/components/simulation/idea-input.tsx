@@ -106,7 +106,7 @@ export function IdeaInput({
             <span className="flex items-center gap-2 text-sm font-semibold text-ink">
               Weekly Challenge
               <span className="rounded-full bg-we-red/15 px-2 py-0.5 text-[10px] font-medium text-we-red">
-                Earn a point
+                Earn points
               </span>
             </span>
             <span className="block truncate text-[11px] text-ink-muted">

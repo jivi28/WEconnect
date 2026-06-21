@@ -1,11 +1,24 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
- * Time penalty per wrong placement, added to a player's effective solve time.
- * Mistakes never block winning the point — they only push you down the board.
- * Tune here (no DB change needed; ranking is computed client-side).
+ * Points earned for completing a weekly challenge — a performance score, not a
+ * flat 1: start at 100, lose a point per second and 10 per wrong placement, with
+ * a floor so finishing always pays something. Faster + cleaner = more points.
+ * Tune the constants here; the migration backfill mirrors this exact formula.
  */
-export const PENALTY_MS = 10_000; // 10s per misplacement
+const BASE_POINTS = 100;
+const TIME_PENALTY_PER_SEC = 1;
+const MISTAKE_PENALTY = 10;
+const MIN_POINTS = 10;
+
+export function scoreFor(durationMs: number, mistakes: number): number {
+  const seconds = Math.floor(Math.max(0, durationMs) / 1000);
+  const raw =
+    BASE_POINTS -
+    seconds * TIME_PENALTY_PER_SEC -
+    Math.max(0, mistakes) * MISTAKE_PENALTY;
+  return Math.max(MIN_POINTS, raw);
+}
 
 export interface LeaderboardRow {
   user_id: string;
@@ -20,17 +33,10 @@ export interface LeaderboardRow {
   last_completed: string | null;
 }
 
-/** Effective ranking time: raw solve time + a fixed penalty per misplacement. */
-export function effectiveMs(row: LeaderboardRow): number {
-  return (row.avg_ms ?? 0) + (row.avg_mistakes ?? 0) * PENALTY_MS;
-}
-
 /**
- * Top entries on the weekly-challenge leaderboard: most points first, then the
- * lowest *effective* time — which folds in a penalty for wrong placements, so
- * both a slow solve and a sloppy (many-mistake) solve drop you down the board.
- * The view only includes users who have scored. Sorted client-side over the
- * (≤50-row) board so the mistake penalty stays tunable in PENALTY_MS.
+ * Top entries on the weekly-challenge leaderboard: most points first (points
+ * already fold in speed + mistakes via scoreFor), ties broken by fastest average
+ * solve time. The view only includes users who have scored.
  */
 export async function fetchLeaderboard(
   supabase: SupabaseClient,
@@ -41,13 +47,12 @@ export async function fetchLeaderboard(
     .select(
       "user_id, display_name, points, avg_ms, total_mistakes, avg_mistakes, last_completed",
     )
+    .order("points", { ascending: false })
+    .order("avg_ms", { ascending: true, nullsFirst: false })
     .limit(limit);
 
   if (error) throw error;
-  const rows = (data ?? []) as LeaderboardRow[];
-  return rows.sort(
-    (a, b) => b.points - a.points || effectiveMs(a) - effectiveMs(b),
-  );
+  return (data ?? []) as LeaderboardRow[];
 }
 
 /** Whether this user has already earned the point for the given week. */
@@ -67,12 +72,13 @@ export async function hasCompletedWeek(
 }
 
 export type AwardResult =
-  | { status: "awarded" }
+  | { status: "awarded"; points: number }
   | { status: "already" }
   | { status: "error"; message: string };
 
 /**
- * Award the weekly point. The unique (user_id, week_key) constraint means a
+ * Award the weekly score. Points reflect performance (see scoreFor) — faster,
+ * cleaner solves earn more. The unique (user_id, week_key) constraint means a
  * second attempt in the same week is a no-op (returns "already").
  */
 export async function awardWeeklyPoint(
@@ -83,6 +89,7 @@ export async function awardWeeklyPoint(
   durationMs: number,
   mistakes: number,
 ): Promise<AwardResult> {
+  const points = scoreFor(durationMs, mistakes);
   const { error } = await supabase
     .from("wc_challenge_completions")
     .insert({
@@ -91,9 +98,10 @@ export async function awardWeeklyPoint(
       product,
       duration_ms: Math.max(0, Math.round(durationMs)),
       mistakes: Math.max(0, Math.round(mistakes)),
+      points,
     });
 
-  if (!error) return { status: "awarded" };
+  if (!error) return { status: "awarded", points };
   // 23505 = unique_violation → already earned this week.
   if (error.code === "23505") return { status: "already" };
   return { status: "error", message: error.message };
