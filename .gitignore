@@ -1,0 +1,41 @@
+# Repo-wide backstop. Each module also has its own .gitignore.
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+build/
+.next/
+out/
+.vercel/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Test coverage
+coverage/
+*.lcov
+.nyc_output/
+
+# Editor / OS
+.DS_Store
+*.pem
+.idea/
+.vscode/
+
+# Local tooling
+.claude/
+.mcp.json
