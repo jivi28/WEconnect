@@ -3,12 +3,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { IconArrowRight, IconCircleX } from "@tabler/icons-react";
+import { Trophy } from "lucide-react";
 import type {
   AIComponentSelection,
   SimulationComponent,
   SimulationData,
 } from "@/lib/types";
 import { ALL_COMPONENTS } from "@/lib/simulation/weComponentData";
+import { useAuth } from "@/components/auth/auth-provider";
+import { getSupabase } from "@/lib/supabase/client";
+import { getWeekKey, getWeeklyProduct } from "@/lib/weekly/challenge";
+import { awardWeeklyPoint } from "@/lib/weekly/scores";
 import { TopBar } from "./top-bar";
 import { IdeaInput } from "./idea-input";
 import { PuzzleWorkspace } from "./puzzle-workspace";
@@ -17,6 +22,13 @@ import { ComponentModal3D } from "./ComponentModal3D";
 import { GlassButton, GlassSVGFilter } from "./GlassButton";
 import { ShaderAnimation } from "./shader-animation";
 import { WeLogo } from "./we-logo";
+import { LeaderboardPanel, refreshLeaderboard } from "./leaderboard-panel";
+
+type ChallengeToast =
+  | { type: "awarded" }
+  | { type: "already" }
+  | { type: "signin" }
+  | { type: "error"; message: string };
 
 type Step =
   | "input"
@@ -42,13 +54,22 @@ function iconKey(icon: string) {
 }
 
 export function Simulator() {
+  const { user } = useAuth();
   const [step, setStep] = useState<Step>("input");
   const [simulation, setSimulation] = useState<SimulationData | null>(null);
   const [expanded, setExpanded] = useState<SimulationComponent | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [serviceError, setServiceError] = useState(false);
+  const [challengeToast, setChallengeToast] = useState<ChallengeToast | null>(null);
   const loadingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const aiRequest = useRef<AbortController | null>(null);
+  /** Set while a weekly-challenge run is active; cleared for normal sims. */
+  const challengeCtx = useRef<{
+    weekKey: string;
+    product: string;
+    startedAt?: number;
+  } | null>(null);
+  const weeklyProduct = getWeeklyProduct();
 
   useEffect(() => {
     return () => {
@@ -57,14 +78,19 @@ export function Simulator() {
     };
   }, []);
 
-  const handleSubmit = useCallback(async (idea: string) => {
+  const handleSubmit = useCallback(
+    async (idea: string, options?: { challenge?: boolean }) => {
     aiRequest.current?.abort();
     const controller = new AbortController();
     aiRequest.current = controller;
+    challengeCtx.current = options?.challenge
+      ? { weekKey: getWeekKey(), product: idea }
+      : null;
     setExpanded(null);
     setSimulation(null);
     setErrorMessage("");
     setServiceError(false);
+    setChallengeToast(null);
     setStep("loading");
 
     try {
@@ -145,6 +171,8 @@ export function Simulator() {
         processSteps,
         illustrationPlan: result.illustrationPlan,
       });
+      // Start the solve clock now (after AI loading), for challenge runs.
+      if (challengeCtx.current) challengeCtx.current.startedAt = Date.now();
       setStep("workspace");
     } catch (error) {
       if (controller.signal.aborted) return;
@@ -157,9 +185,42 @@ export function Simulator() {
     }
   }, []);
 
+  const handleWeeklyChallenge = useCallback(() => {
+    handleSubmit(weeklyProduct, { challenge: true });
+  }, [handleSubmit, weeklyProduct]);
+
+  const handlePuzzleComplete = useCallback(async (mistakes: number) => {
+    const ctx = challengeCtx.current;
+    if (!ctx) return; // not a weekly-challenge run
+    if (!user) {
+      setChallengeToast({ type: "signin" });
+      return;
+    }
+    const supabase = getSupabase();
+    if (!supabase) return;
+    const durationMs = Date.now() - (ctx.startedAt ?? Date.now());
+    const result = await awardWeeklyPoint(
+      supabase,
+      user.id,
+      ctx.weekKey,
+      ctx.product,
+      durationMs,
+      mistakes,
+    );
+    if (result.status === "awarded") {
+      setChallengeToast({ type: "awarded" });
+      refreshLeaderboard();
+    } else if (result.status === "already") {
+      setChallengeToast({ type: "already" });
+    } else {
+      setChallengeToast({ type: "error", message: result.message });
+    }
+  }, [user]);
+
   const handleFreeBuild = useCallback(() => {
     aiRequest.current?.abort();
     if (loadingTimer.current) clearTimeout(loadingTimer.current);
+    challengeCtx.current = null;
     setSimulation(null);
     setStep("freeloading");
     loadingTimer.current = setTimeout(() => {
@@ -170,11 +231,13 @@ export function Simulator() {
   const handleReset = useCallback(() => {
     aiRequest.current?.abort();
     if (loadingTimer.current) clearTimeout(loadingTimer.current);
+    challengeCtx.current = null;
     setStep("input");
     setSimulation(null);
     setExpanded(null);
     setErrorMessage("");
     setServiceError(false);
+    setChallengeToast(null);
   }, []);
 
   return (
@@ -190,11 +253,21 @@ export function Simulator() {
           {step === "input" && (
             <motion.div
               key="input"
-              className="absolute inset-0 flex flex-col"
+              className="absolute inset-0 flex"
               exit={{ opacity: 0, y: -24 }}
               transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
             >
-              <IdeaInput onSubmit={handleSubmit} onFreeBuild={handleFreeBuild} />
+              <div className="min-w-0 flex-1 overflow-y-auto">
+                <IdeaInput
+                  onSubmit={handleSubmit}
+                  onFreeBuild={handleFreeBuild}
+                  onWeeklyChallenge={handleWeeklyChallenge}
+                  weeklyProduct={weeklyProduct}
+                />
+              </div>
+              <div className="hidden w-[320px] shrink-0 border-l border-line bg-[#0d0d0d] p-4 lg:flex">
+                <LeaderboardPanel />
+              </div>
             </motion.div>
           )}
 
@@ -313,7 +386,17 @@ export function Simulator() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
             >
-              <PuzzleWorkspace data={simulation} onExpand={setExpanded} />
+              <PuzzleWorkspace
+                data={simulation}
+                onExpand={setExpanded}
+                onComplete={handlePuzzleComplete}
+              />
+              {challengeToast && (
+                <ChallengeToastBanner
+                  toast={challengeToast}
+                  onDismiss={() => setChallengeToast(null)}
+                />
+              )}
             </motion.div>
           )}
 
@@ -338,5 +421,71 @@ export function Simulator() {
         onClose={() => setExpanded(null)}
       />
     </div>
+  );
+}
+
+const TOAST_COPY: Record<
+  ChallengeToast["type"],
+  { title: string; body: string; tone: "good" | "info" }
+> = {
+  awarded: {
+    title: "Challenge complete — +1 point! 🏆",
+    body: "Your point has been added to the leaderboard.",
+    tone: "good",
+  },
+  already: {
+    title: "Nicely done!",
+    body: "You already earned this week's point — come back next week for a new product.",
+    tone: "info",
+  },
+  signin: {
+    title: "Sign in to score",
+    body: "You solved it! Sign in from the start screen to earn weekly-challenge points.",
+    tone: "info",
+  },
+  error: {
+    title: "Couldn't save your point",
+    body: "Your solution was correct, but saving the score failed. Please try again.",
+    tone: "info",
+  },
+};
+
+function ChallengeToastBanner({
+  toast,
+  onDismiss,
+}: {
+  toast: ChallengeToast;
+  onDismiss: () => void;
+}) {
+  const copy = TOAST_COPY[toast.type];
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24, x: "-50%" }}
+      animate={{ opacity: 1, y: 0, x: "-50%" }}
+      className="absolute bottom-6 left-1/2 z-20 flex w-[min(92vw,420px)] items-start gap-3 rounded-xl border border-we-red/40 bg-[#161616] p-4 shadow-2xl"
+    >
+      <span
+        className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
+          copy.tone === "good"
+            ? "bg-we-red/20 text-we-red"
+            : "bg-white/10 text-white"
+        }`}
+      >
+        <Trophy size={16} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-semibold text-white">{copy.title}</p>
+        <p className="mt-0.5 text-[12px] leading-snug text-[#aaa]">
+          {toast.type === "error" ? toast.message : copy.body}
+        </p>
+      </div>
+      <button
+        type="button"
+        onClick={onDismiss}
+        className="shrink-0 rounded-md px-2 py-1 text-xs text-[#888] hover:text-white"
+      >
+        Dismiss
+      </button>
+    </motion.div>
   );
 }

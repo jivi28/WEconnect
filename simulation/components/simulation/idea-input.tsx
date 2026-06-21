@@ -2,16 +2,20 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Blocks, Sparkles } from "lucide-react";
+import { ArrowRight, Blocks, Sparkles, Trophy } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { EXAMPLE_IDEAS } from "@/data/components";
 
 export function IdeaInput({
   onSubmit,
   onFreeBuild,
+  onWeeklyChallenge,
+  weeklyProduct,
 }: {
   onSubmit: (idea: string) => void;
   onFreeBuild: () => void;
+  onWeeklyChallenge: () => void;
+  weeklyProduct: string;
 }) {
   const [idea, setIdea] = useState("");
 
@@ -92,8 +96,35 @@ export function IdeaInput({
 
         <button
           type="button"
+          onClick={onWeeklyChallenge}
+          className="group mt-4 flex w-full items-center gap-3 rounded-lg border border-we-red/50 bg-gradient-to-r from-[#1a0000] to-card px-4 py-3 text-left transition-colors hover:border-we-red"
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-we-red/15 text-we-red">
+            <Trophy size={18} />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="flex items-center gap-2 text-sm font-semibold text-ink">
+              Weekly Challenge
+              <span className="rounded-full bg-we-red/20 px-2 py-0.5 text-[10px] font-medium text-[#ffb3b3]">
+                Earn a point
+              </span>
+            </span>
+            <span className="block truncate text-[11px] text-ink-muted">
+              This week: build a{" "}
+              <span className="font-medium text-ink">{weeklyProduct}</span> — get
+              every component right to score.
+            </span>
+          </span>
+          <ArrowRight
+            size={16}
+            className="shrink-0 text-we-red transition-transform group-hover:translate-x-0.5"
+          />
+        </button>
+
+        <button
+          type="button"
           onClick={onFreeBuild}
-          className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-line bg-card px-5 py-2.5 text-sm text-ink transition-colors hover:border-we-red"
+          className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-line bg-card px-5 py-2.5 text-sm text-ink transition-colors hover:border-we-red"
         >
           <Blocks size={16} className="text-we-red" />
           Free build

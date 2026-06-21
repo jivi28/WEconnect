@@ -47,9 +47,11 @@ const SLOT_ICONS: Record<string, Icon> = {
 export function PuzzleWorkspace({
   data,
   onExpand,
+  onComplete,
 }: {
   data: SimulationData;
   onExpand: (component: SimulationComponent) => void;
+  onComplete?: (mistakes: number) => void;
 }) {
   const [selected, setSelected] = useState<SimulationComponent | null>(null);
   const [placed, setPlaced] = useState<Record<number, SimulationComponent>>({});
@@ -57,6 +59,8 @@ export function PuzzleWorkspace({
   const wrongTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const revealRef = useRef<HTMLDivElement | null>(null);
   const celebrated = useRef(false);
+  /** Wrong placements made before completing — penalizes the leaderboard rank. */
+  const mistakes = useRef(0);
   const placedCount = Object.keys(placed).length;
   const complete = placedCount === data.steps.length;
   const usedIds = new Set(Object.values(placed).map((component) => component.id));
@@ -64,6 +68,7 @@ export function PuzzleWorkspace({
   useEffect(() => {
     if (!complete || celebrated.current) return;
     celebrated.current = true;
+    onComplete?.(mistakes.current);
     const timer = setTimeout(() => {
       const rect = revealRef.current?.getBoundingClientRect();
       confetti({
@@ -90,6 +95,7 @@ export function PuzzleWorkspace({
   function place(step: SimulationStep, component = selected) {
     if (!component) return;
     if (component.id !== step.component.id) {
+      mistakes.current += 1;
       if (wrongTimer.current) clearTimeout(wrongTimer.current);
       setWrongSlot(step.slotNumber);
       wrongTimer.current = setTimeout(() => setWrongSlot(null), 650);

@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { supabase } from '../supabaseClient'
 import Profile from './Profile'
 import Network from './Network'
 import EventsTab from './EventsTab'
@@ -24,7 +25,7 @@ export default function Home() {
   const tabs = [
     ...BASE_TABS,
     ...(isWurthEmployee ? [] : [{ id: 'projects', label: 'Projects' }]),
-    ...(isWurthEmployee ? [{ id: 'analysis', label: 'Analysis' }] : []),
+    ...(isWurthEmployee ? [{ id: 'analysis', label: 'Event Analytics' }] : []),
     { id: 'simulation', label: 'Simulation' }
   ]
 
@@ -81,7 +82,7 @@ function AnalysisTab() {
   return (
     <iframe
       src="http://localhost:3000"
-      title="WEconnect Event ROI Analysis"
+      title="WEconnect Event Analytics"
       style={{
         width: '100%',
         height: 'calc(100vh - 160px)',
@@ -102,16 +103,73 @@ function AnalysisTab() {
 // simulator.
 function SimulationTab() {
   const src = import.meta.env.VITE_SIMULATION_URL || 'http://localhost:3001'
+  const iframeRef = useRef(null)
+
+  // Shared login: hand the simulator our Supabase session so it plays as the
+  // logged-in WEconnect user (no separate signup). localStorage isn't shared
+  // cross-origin (5173 ↔ 3001), so we postMessage the tokens. We send on the
+  // simulator's "wc-ready" ping, on iframe load, and whenever auth changes.
+  useEffect(() => {
+    const targetOrigin = new URL(src).origin
+
+    async function sendSession() {
+      const win = iframeRef.current?.contentWindow
+      if (!win) return
+      const { data } = await supabase.auth.getSession()
+      const s = data.session
+      if (!s) return
+      win.postMessage(
+        {
+          type: 'wc-session',
+          access_token: s.access_token,
+          refresh_token: s.refresh_token
+        },
+        targetOrigin
+      )
+    }
+
+    function onMessage(e) {
+      if (e.origin === targetOrigin && e.data?.type === 'wc-ready') sendSession()
+    }
+
+    window.addEventListener('message', onMessage)
+    const { data: sub } = supabase.auth.onAuthStateChange(() => sendSession())
+
+    return () => {
+      window.removeEventListener('message', onMessage)
+      sub.subscription.unsubscribe()
+    }
+  }, [src])
+
   return (
     <iframe
+      ref={iframeRef}
       src={src}
       title="WEconnect Innovation Simulator"
+      onLoad={() => {
+        // Belt-and-braces: also push the session once the frame loads, in case
+        // its "wc-ready" fired before this tab mounted.
+        const win = iframeRef.current?.contentWindow
+        supabase.auth.getSession().then(({ data }) => {
+          const s = data.session
+          if (s && win) {
+            win.postMessage(
+              {
+                type: 'wc-session',
+                access_token: s.access_token,
+                refresh_token: s.refresh_token
+              },
+              new URL(src).origin
+            )
+          }
+        })
+      }}
       style={{
         width: '100%',
-        height: 'calc(100vh - 160px)',
+        height: 'calc(100vh - 140px)',
         border: 'none',
         borderRadius: '12px',
-        background: 'white'
+        background: '#0f0f0f'
       }}
     />
   )
