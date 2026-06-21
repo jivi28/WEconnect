@@ -1,0 +1,231 @@
+{
+  "accessors": [
+    {
+      "bufferView": 0,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 54,
+      "max": [
+        0.0008,
+        0.0007941670992784436,
+        0.015
+      ],
+      "min": [
+        -0.0008,
+        -0.0007941670992784432,
+        -0.015
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 648,
+      "componentType": 5126,
+      "count": 54,
+      "max": [
+        0.001,
+        0.0009927088740980543,
+        0.015
+      ],
+      "min": [
+        -0.001,
+        -0.000992708874098054,
+        -0.015
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 1296,
+      "componentType": 5126,
+      "count": 52,
+      "max": [
+        0.001,
+        0.0009927088740980543,
+        -0.015
+      ],
+      "min": [
+        -0.001,
+        -0.000992708874098054,
+        -0.015
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 0,
+      "byteOffset": 1920,
+      "componentType": 5126,
+      "count": 52,
+      "max": [
+        0.001,
+        0.0009927088740980543,
+        0.015
+      ],
+      "min": [
+        -0.001,
+        -0.000992708874098054,
+        0.015
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 0,
+      "componentType": 5126,
+      "count": 54,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 648,
+      "componentType": 5126,
+      "count": 54,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 1296,
+      "componentType": 5126,
+      "count": 52,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "byteOffset": 1920,
+      "componentType": 5126,
+      "count": 52,
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 0,
+      "componentType": 5123,
+      "count": 156,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 312,
+      "componentType": 5123,
+      "count": 156,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 624,
+      "componentType": 5123,
+      "count": 156,
+      "type": "SCALAR"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 936,
+      "componentType": 5123,
+      "count": 156,
+      "type": "SCALAR"
+    }
+  ],
+  "asset": {
+    "generator": "Open CASCADE Technology 7.8 [dev.opencascade.org]",
+    "version": "2.0"
+  },
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 2544,
+      "byteOffset": 0,
+      "byteStride": 12,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 2544,
+      "byteOffset": 2544,
+      "byteStride": 12,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 1248,
+      "byteOffset": 5088,
+      "target": 34963
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 6336,
+      "uri": "WE-ST Conductive NiCu Glass Fibre Woven.bin"
+    }
+  ],
+  "materials": [
+    {
+      "name": "mat_0",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.5271151661872864,
+          0.5271151661872864,
+          0.5271151661872864,
+          1
+        ]
+      },
+      "doubleSided": true
+    }
+  ],
+  "meshes": [
+    {
+      "name": "1",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 4,
+            "POSITION": 0
+          },
+          "indices": 8,
+          "material": 0,
+          "mode": 4
+        },
+        {
+          "attributes": {
+            "NORMAL": 5,
+            "POSITION": 1
+          },
+          "indices": 9,
+          "material": 0,
+          "mode": 4
+        },
+        {
+          "attributes": {
+            "NORMAL": 6,
+            "POSITION": 2
+          },
+          "indices": 10,
+          "material": 0,
+          "mode": 4
+        },
+        {
+          "attributes": {
+            "NORMAL": 7,
+            "POSITION": 3
+          },
+          "indices": 11,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "1"
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "nodes": [
+        0
+      ]
+    }
+  ]
+}
