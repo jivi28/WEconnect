@@ -92,9 +92,10 @@ export default function Home() {
 // this Vite app, since it depends on Next's App Router/server routes and a
 // separate React 19 + Tailwind v4 toolchain.
 function AnalysisTab() {
+  const src = import.meta.env.VITE_ANALYSIS_URL || 'http://localhost:3000'
   return (
     <iframe
-      src="http://localhost:3000"
+      src={src}
       title="WEconnect Event Analytics"
       style={{
         display: 'block',
