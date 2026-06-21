@@ -22,7 +22,10 @@ export function scoreFor(durationMs: number, mistakes: number): number {
 
 export interface LeaderboardRow {
   user_id: string;
-  display_name: string;
+  /** Public handle — the only identity students ever see. */
+  username: string;
+  /** 'student' | 'educator' | 'wurth_employee'. */
+  role: string;
   points: number;
   /** Average solve time across the user's wins, in ms (null if untimed). */
   avg_ms: number | null;
@@ -33,26 +36,65 @@ export interface LeaderboardRow {
   last_completed: string | null;
 }
 
+/** Which players the board shows: just students, or everyone (incl. educators/employees). */
+export type LeaderboardScope = "students" | "all";
+
 /**
  * Top entries on the weekly-challenge leaderboard: most points first (points
  * already fold in speed + mistakes via scoreFor), ties broken by fastest average
- * solve time. The view only includes users who have scored.
+ * solve time. The view exposes only username + role + stats — never name/email —
+ * so students see usernames only. The `students` scope filters to role='student'.
  */
 export async function fetchLeaderboard(
   supabase: SupabaseClient,
+  scope: LeaderboardScope = "students",
   limit = 50,
 ): Promise<LeaderboardRow[]> {
-  const { data, error } = await supabase
+  let query = supabase
     .from("wc_leaderboard")
     .select(
-      "user_id, display_name, points, avg_ms, total_mistakes, avg_mistakes, last_completed",
-    )
+      "user_id, username, role, points, avg_ms, total_mistakes, avg_mistakes, last_completed",
+    );
+  if (scope === "students") query = query.eq("role", "student");
+
+  const { data, error } = await query
     .order("points", { ascending: false })
     .order("avg_ms", { ascending: true, nullsFirst: false })
     .limit(limit);
 
   if (error) throw error;
   return (data ?? []) as LeaderboardRow[];
+}
+
+export interface ContactInfo {
+  name: string | null;
+  email: string | null;
+}
+
+/**
+ * Name + email for the given players, keyed by user id. The wc_student_contact
+ * RPC is server-gated: it returns rows ONLY when the caller is a wurth_employee,
+ * so this is empty for students/educators/anon (no PII leak). Safe to call from
+ * the board; we only invoke it when the viewer is an employee.
+ */
+export async function fetchContacts(
+  supabase: SupabaseClient,
+  userIds: string[],
+): Promise<Map<string, ContactInfo>> {
+  const out = new Map<string, ContactInfo>();
+  if (userIds.length === 0) return out;
+  const { data, error } = await supabase.rpc("wc_student_contact", {
+    target_ids: userIds,
+  });
+  if (error) return out; // gated / transient → no enrichment
+  for (const row of (data ?? []) as Array<{
+    id: string;
+    name: string | null;
+    email: string | null;
+  }>) {
+    out.set(row.id, { name: row.name, email: row.email });
+  }
+  return out;
 }
 
 /** Whether this user has already earned the point for the given week. */
