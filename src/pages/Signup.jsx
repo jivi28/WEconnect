@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
 import RoleFields from '../components/RoleFields'
 import { UNIVERSITY_EMAIL_ALLOWLIST } from '../constants/options'
+import { formatDate } from '../lib/format'
 import { readableAuthError } from './Login'
 
 const ROLES = [
@@ -22,8 +24,13 @@ function passesMockAffiliationCheck(email) {
   return UNIVERSITY_EMAIL_ALLOWLIST.includes(domain)
 }
 
-export default function Signup({ onSwitchToLogin }) {
+// `eventToken` (optional): when set, this is the QR-code flow — the form is
+// locked to that one event (source attribution), the "which event?" dropdown is
+// hidden, and a successful signup redirects to /slides to unlock the event's
+// slides instead of showing the email-confirm notice / MainApp gating.
+export default function Signup({ onSwitchToLogin, eventToken = null }) {
   const { signup } = useAuth()
+  const navigate = useNavigate()
   const [name, setName] = useState('')
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
@@ -34,17 +41,33 @@ export default function Signup({ onSwitchToLogin }) {
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
   const [confirmNotice, setConfirmNotice] = useState(false)
+  const [msg, setMsg] = useState('')
   const [events, setEvents] = useState([])
   const [sourceEventId, setSourceEventId] = useState('')
+  const [lockedEvent, setLockedEvent] = useState(null)
+  const [lockedEventErr, setLockedEventErr] = useState('')
 
   const requiresAffiliationCheck = role === 'student' || role === 'educator'
 
+  // QR attendees are students/educators only — Würth Employees never onboard
+  // through an event QR code.
+  const availableRoles = eventToken ? ROLES.filter((r) => r.value !== 'wurth_employee') : ROLES
+
   useEffect(() => {
+    // QR flow: resolve the single locked event instead of offering a dropdown.
+    if (eventToken) {
+      supabase.rpc('event_by_qr_token', { token: eventToken }).then(({ data, error }) => {
+        if (error) return setLockedEventErr(error.message)
+        if (!data || data.length === 0) return setLockedEventErr('Unknown event QR code.')
+        setLockedEvent(data[0])
+      })
+      return
+    }
     supabase
       .from('events')
       .select('*')
       .then(({ data }) => setEvents(data || []))
-  }, [])
+  }, [eventToken])
 
   function setRoleField(key, value) {
     setRoleData((prev) => ({ ...prev, [key]: value }))
@@ -71,9 +94,30 @@ export default function Signup({ onSwitchToLogin }) {
         password,
         role,
         roleData: finalRoleData,
-        sourceEventId,
+        sourceEventId: lockedEvent ? lockedEvent.id : sourceEventId,
         verificationStatus
       })
+
+      // QR flow: send them straight to the event's slides. /slides is its own
+      // route outside MainApp's verification gate, so students get the slides
+      // immediately even while their account stays "pending" elsewhere.
+      if (eventToken) {
+        if (!needsEmailConfirmation) {
+          navigate('/slides')
+          return
+        }
+        const { error: signInErr } = await supabase.auth.signInWithPassword({ email, password })
+        if (signInErr) {
+          setMsg(
+            'Account created and registered for the event! Please confirm your ' +
+              'email, then sign in to access the slides.'
+          )
+          return
+        }
+        navigate('/slides')
+        return
+      }
+
       if (needsEmailConfirmation) setConfirmNotice(true)
     } catch (err) {
       setError(readableAuthError(err))
@@ -99,14 +143,49 @@ export default function Signup({ onSwitchToLogin }) {
     )
   }
 
+  if (lockedEventErr) {
+    return (
+      <div className="auth-screen">
+        <div className="auth-card">
+          <p className="we-wordmark">
+            WE<span>connect</span>
+          </p>
+          <p className="eyebrow">Event registration</p>
+          <h1>Registration</h1>
+          <p className="error">{lockedEventErr}</p>
+          <p className="switch-line">
+            <Link to="/">Back to home</Link>
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="auth-screen">
       <div className="auth-card">
         <p className="we-wordmark">
           WE<span>connect</span>
         </p>
+        {eventToken && <p className="eyebrow">Event registration</p>}
         <h1>Create your account</h1>
-        <p className="subtitle">Tell us who you are so we can shape your view of the network.</p>
+        {eventToken ? (
+          <>
+            <p className="subtitle">
+              {lockedEvent ? (
+                <>
+                  <strong>{lockedEvent.name}</strong>
+                  {lockedEvent.event_date ? ` — ${formatDate(lockedEvent.event_date)}` : ''}
+                </>
+              ) : (
+                'Loading event…'
+              )}
+            </p>
+            <p className="subtitle">Sign up to join WEconnect and unlock this event's slides.</p>
+          </>
+        ) : (
+          <p className="subtitle">Tell us who you are so we can shape your view of the network.</p>
+        )}
 
         <form onSubmit={handleSubmit} className="form">
           <label className="field">
@@ -151,7 +230,7 @@ export default function Signup({ onSwitchToLogin }) {
           <div className="field">
             <span>Role</span>
             <div className="role-picker">
-              {ROLES.map((r) => (
+              {availableRoles.map((r) => (
                 <button
                   type="button"
                   key={r.value}
@@ -182,21 +261,24 @@ export default function Signup({ onSwitchToLogin }) {
             </label>
           )}
 
-          <label className="field">
-            <span>Which event brought you here? (optional)</span>
-            <select value={sourceEventId} onChange={(e) => setSourceEventId(e.target.value)}>
-              <option value="">Not sure / none</option>
-              {events.map((event) => (
-                <option key={event.id} value={event.id}>
-                  {event.name}
-                </option>
-              ))}
-            </select>
-          </label>
+          {!eventToken && (
+            <label className="field">
+              <span>Which event brought you here? (optional)</span>
+              <select value={sourceEventId} onChange={(e) => setSourceEventId(e.target.value)}>
+                <option value="">Not sure / none</option>
+                {events.map((event) => (
+                  <option key={event.id} value={event.id}>
+                    {event.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
 
           {error && <p className="error">{error}</p>}
+          {msg && <p className="success">{msg}</p>}
 
-          <button type="submit" className="btn-we" disabled={busy}>
+          <button type="submit" className="btn-we" disabled={busy || (eventToken && !lockedEvent)}>
             <span className="btn-we-label">{busy ? 'Creating account…' : 'Create account'}</span>
             <span className="btn-we-arrow" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
@@ -206,12 +288,18 @@ export default function Signup({ onSwitchToLogin }) {
           </button>
         </form>
 
-        <p className="switch-line">
-          Already have an account?{' '}
-          <button type="button" className="link-btn" onClick={onSwitchToLogin}>
-            Log in
-          </button>
-        </p>
+        {eventToken ? (
+          <p className="switch-line">
+            <Link to="/">Back to home</Link>
+          </p>
+        ) : (
+          <p className="switch-line">
+            Already have an account?{' '}
+            <button type="button" className="link-btn" onClick={onSwitchToLogin}>
+              Log in
+            </button>
+          </p>
+        )}
       </div>
     </div>
   )

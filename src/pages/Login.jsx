@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 
-export default function Login({ onSwitchToSignup }) {
+export default function Login({ onSwitchToSignup, onLoggedIn }) {
   const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -14,6 +14,9 @@ export default function Login({ onSwitchToSignup }) {
     setBusy(true)
     try {
       await login({ email, password })
+      // QR flow passes this to jump straight to the event's slides; in the main
+      // app it's absent and MainApp re-renders to the app on its own.
+      if (onLoggedIn) onLoggedIn()
     } catch (err) {
       setError(readableAuthError(err))
     } finally {

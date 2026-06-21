@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
+import Landing from './components/Landing'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import VerificationPending from './pages/VerificationPending'
@@ -35,7 +36,13 @@ export default function App() {
 
 function MainApp() {
   const { user, profile, loading } = useAuth()
-  const [authView, setAuthView] = useState('login') // 'login' | 'signup'
+  const [authView, setAuthView] = useState('landing') // 'landing' | 'login' | 'signup'
+
+  // Always return to the public landing page after logout, rather than the
+  // login/signup view the user happened to leave behind before signing in.
+  useEffect(() => {
+    if (!user) setAuthView('landing')
+  }, [user])
 
   if (loading) {
     return (
@@ -46,10 +53,14 @@ function MainApp() {
   }
 
   if (!user || !profile) {
-    return authView === 'login' ? (
-      <Login onSwitchToSignup={() => setAuthView('signup')} />
-    ) : (
-      <Signup onSwitchToLogin={() => setAuthView('login')} />
+    if (authView === 'login') {
+      return <Login onSwitchToSignup={() => setAuthView('signup')} />
+    }
+    if (authView === 'signup') {
+      return <Signup onSwitchToLogin={() => setAuthView('login')} />
+    }
+    return (
+      <Landing onSignup={() => setAuthView('signup')} onLogin={() => setAuthView('login')} />
     )
   }
 

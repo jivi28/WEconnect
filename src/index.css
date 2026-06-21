@@ -1029,10 +1029,132 @@ textarea {
 
 /* ---------- Responsive ---------- */
 
+/* Public landing page (components/Landing.jsx) — reuses the .auth-screen
+   gridded background; everything below is landing-specific. */
+.landing {
+  align-items: flex-start;
+}
+.landing-inner {
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1rem 0 0.5rem;
+}
+.landing-logo {
+  height: 64px;
+  width: auto;
+  display: block;
+}
+.landing-motto {
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.6rem;
+  letter-spacing: -0.02em;
+  color: var(--we-ink);
+  margin: 1rem 0 0.25rem;
+}
+.landing-event {
+  margin: 0.75rem 0 0.25rem;
+}
+.landing-event-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin: 0 0 0.25rem;
+}
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.25rem;
+  width: 100%;
+  margin: 1.75rem 0;
+}
+.feature-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1.5rem 1.25rem;
+  box-shadow: 0 16px 36px -24px rgba(31, 31, 31, 0.35);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.feature-num {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 0 0 0.5rem;
+}
+.feature-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.feature-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  margin: 0;
+}
+.feature-sub {
+  color: var(--muted);
+  font-size: 0.92rem;
+  margin: 0.35rem 0 0.6rem;
+}
+.feature-arrow {
+  display: inline-flex;
+  margin-bottom: 0.5rem;
+}
+.feature-arrow svg {
+  width: 18px;
+  height: 18px;
+}
+.feature-outcome {
+  font-weight: 800;
+  font-size: 1.02rem;
+  margin: 0;
+}
+.feature-note {
+  font-family: var(--font-mono);
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  margin: 0.55rem 0 0;
+}
+.landing-cta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-top: 0.25rem;
+}
+.landing-login-btn {
+  padding: 0.85rem 1.5rem;
+  font-size: 1rem;
+}
+
 @media (max-width: 760px) {
   .topbar {
     flex-wrap: wrap;
     padding: 0.75rem 1.1rem;
+  }
+  .landing-cta-row {
+    flex-direction: column;
+    width: 100%;
+  }
+  .landing-cta-row .btn-cta,
+  .landing-cta-row .landing-login-btn {
+    width: 100%;
   }
   .topbar-nav {
     order: 3;
