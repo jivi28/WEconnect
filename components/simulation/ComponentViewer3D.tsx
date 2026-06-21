@@ -143,7 +143,7 @@ function Skeleton({ height }: { height: number }) {
   return (
     <div
       style={{ height }}
-      className="w-full animate-pulse rounded-md bg-[#2a2a2a]"
+      className="w-full animate-pulse rounded-md bg-[#ececec]"
     />
   );
 }

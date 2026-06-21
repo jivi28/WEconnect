@@ -121,9 +121,9 @@ function Board() {
                 <span
                   className={`w-5 text-center text-xs font-bold ${
                     i === 0
-                      ? "text-yellow-400"
+                      ? "text-yellow-500"
                       : i === 1
-                        ? "text-zinc-300"
+                        ? "text-zinc-400"
                         : i === 2
                           ? "text-amber-600"
                           : "text-ink-faint"

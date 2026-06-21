@@ -13,7 +13,7 @@ const buttonVariants = cva(
           "bg-card text-ink border border-line hover:bg-card-hover hover:border-line-strong",
         ghost: "text-ink-muted hover:text-ink hover:bg-card",
         outline:
-          "border border-line text-ink hover:border-we-red hover:text-white",
+          "border border-line text-ink hover:border-we-red hover:text-we-red",
       },
       size: {
         sm: "h-8 px-3 text-xs",

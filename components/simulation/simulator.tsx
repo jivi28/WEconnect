@@ -20,7 +20,6 @@ import { PuzzleWorkspace } from "./puzzle-workspace";
 import { FreeBuildWorkspace } from "./free-build-workspace";
 import { ComponentModal3D } from "./ComponentModal3D";
 import { GlassButton, GlassSVGFilter } from "./GlassButton";
-import { ShaderAnimation } from "./shader-animation";
 import { WeLogo } from "./we-logo";
 import { LeaderboardPanel, refreshLeaderboard } from "./leaderboard-panel";
 
@@ -241,7 +240,7 @@ export function Simulator() {
   }, []);
 
   return (
-    <div className="flex h-dvh flex-col overflow-hidden bg-[#0d0d0d]">
+    <div className="flex h-dvh flex-col overflow-hidden bg-canvas">
       <GlassSVGFilter />
       <TopBar
         showReset={step === "workspace" || step === "freebuild"}
@@ -265,7 +264,7 @@ export function Simulator() {
                   weeklyProduct={weeklyProduct}
                 />
               </div>
-              <div className="hidden w-[320px] shrink-0 border-l border-line bg-[#0d0d0d] p-4 lg:flex">
+              <div className="hidden w-[320px] shrink-0 border-l border-line bg-canvas p-4 lg:flex">
                 <LeaderboardPanel />
               </div>
             </motion.div>
@@ -277,9 +276,9 @@ export function Simulator() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="absolute inset-0 flex bg-[#141414]"
+              className="absolute inset-0 flex bg-canvas"
             >
-              <div className="hidden w-[340px] shrink-0 border-r border-[#2a2a2a] bg-[#141414] md:block" />
+              <div className="hidden w-[340px] shrink-0 border-r border-line bg-panel md:block" />
               <div className="simulation-grid flex flex-1 items-center justify-center">
                 <div className="flex flex-col items-center text-center">
                   <motion.div
@@ -292,7 +291,7 @@ export function Simulator() {
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="mt-5 text-[13px] font-medium text-[#777]"
+                    className="mt-5 text-[13px] font-medium text-ink-muted"
                   >
                     Analysing your idea...
                   </motion.p>
@@ -300,7 +299,7 @@ export function Simulator() {
                     initial={{ opacity: 0, y: 5 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.8 }}
-                    className="mt-1.5 text-[11px] text-[#999]"
+                    className="mt-1.5 text-[11px] text-ink-faint"
                   >
                     Scanning 76 Würth Elektronik components
                   </motion.p>
@@ -316,11 +315,11 @@ export function Simulator() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="absolute inset-0 bg-black"
+              className="idea-radial absolute inset-0 flex items-center justify-center"
             >
-              <ShaderAnimation />
+              <WeLogo size={54} className="animate-pulse" />
               <div className="pointer-events-none absolute inset-x-0 bottom-10 flex items-center justify-center">
-                <div className="flex items-center gap-3 text-sm text-white/80">
+                <div className="flex items-center gap-3 text-sm text-ink-muted">
                   <span className="h-2 w-2 animate-pulse rounded-full bg-[#CC0000]" />
                   Assembling your workspace...
                 </div>
@@ -336,19 +335,19 @@ export function Simulator() {
               exit={{ opacity: 0 }}
               className="idea-radial absolute inset-0 flex items-center justify-center p-6"
             >
-              <div className="w-full max-w-[480px] rounded-2xl border border-[#2a2a2a] bg-[#141414] p-7 text-center shadow-2xl">
+              <div className="w-full max-w-[480px] rounded-2xl border border-line bg-panel p-7 text-center shadow-xl">
                 <IconCircleX className="mx-auto text-[#CC0000]" size={48} />
-                <h2 className="mt-4 text-lg font-bold text-white">
+                <h2 className="mt-4 text-lg font-bold text-ink">
                   {serviceError
                     ? "Gemini is cooling down"
                     : "We can&apos;t build that yet"}
                 </h2>
-                <p className="mt-3 text-[13px] leading-[1.7] text-[#aaa]">
+                <p className="mt-3 text-[13px] leading-[1.7] text-ink-muted">
                   {errorMessage}
                 </p>
                 {!serviceError && (
-                  <div className="mt-6 border-t border-[#2a2a2a] pt-5">
-                    <p className="text-xs font-medium text-[#888]">
+                  <div className="mt-6 border-t border-line pt-5">
+                    <p className="text-xs font-medium text-ink-muted">
                       Suggested ideas you CAN build:
                     </p>
                     <div className="mt-3 flex flex-wrap justify-center gap-2">
@@ -357,7 +356,7 @@ export function Simulator() {
                           key={idea}
                           type="button"
                           onClick={() => handleSubmit(idea)}
-                          className="rounded-full border border-[#CC0000]/50 bg-[#1a0000] px-3 py-1.5 text-xs text-[#ffb3b3] hover:border-[#CC0000] hover:text-white"
+                          className="rounded-full border border-[#CC0000]/40 bg-[#fdecea] px-3 py-1.5 text-xs text-[#990000] hover:border-[#CC0000] hover:bg-[#fbe0dd]"
                         >
                           {idea}
                         </button>
@@ -462,27 +461,27 @@ function ChallengeToastBanner({
     <motion.div
       initial={{ opacity: 0, y: 24, x: "-50%" }}
       animate={{ opacity: 1, y: 0, x: "-50%" }}
-      className="absolute bottom-6 left-1/2 z-20 flex w-[min(92vw,420px)] items-start gap-3 rounded-xl border border-we-red/40 bg-[#161616] p-4 shadow-2xl"
+      className="absolute bottom-6 left-1/2 z-20 flex w-[min(92vw,420px)] items-start gap-3 rounded-xl border border-we-red/40 bg-panel p-4 shadow-xl"
     >
       <span
         className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${
           copy.tone === "good"
-            ? "bg-we-red/20 text-we-red"
-            : "bg-white/10 text-white"
+            ? "bg-we-red/15 text-we-red"
+            : "bg-ink/5 text-ink-muted"
         }`}
       >
         <Trophy size={16} />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-white">{copy.title}</p>
-        <p className="mt-0.5 text-[12px] leading-snug text-[#aaa]">
+        <p className="text-sm font-semibold text-ink">{copy.title}</p>
+        <p className="mt-0.5 text-[12px] leading-snug text-ink-muted">
           {toast.type === "error" ? toast.message : copy.body}
         </p>
       </div>
       <button
         type="button"
         onClick={onDismiss}
-        className="shrink-0 rounded-md px-2 py-1 text-xs text-[#888] hover:text-white"
+        className="shrink-0 rounded-md px-2 py-1 text-xs text-ink-faint hover:text-ink"
       >
         Dismiss
       </button>
