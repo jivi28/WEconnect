@@ -1,5 +1,12 @@
-import weConnectLogo from '../assets/we-connect-logo.png'
+import weConnectLogo from '../assets/we-connect-logo-transparent.png'
 import { formatDate } from '../lib/format'
+
+// The motto words, shown as separate colorful bubbles (colors match FEATURES).
+const MOTTO = [
+  { word: 'Connect', color: 'var(--we-red)' },
+  { word: 'Create', color: '#e0a200' },
+  { word: 'Prove', color: '#1d9d5b' }
+]
 
 // Public front door. Reused in two places:
 //  - src/App.jsx (logged-out `/`): generic, no event.
@@ -36,7 +43,14 @@ export default function Landing({ event = null, onSignup, onLogin }) {
     <div className="auth-screen landing">
       <div className="landing-inner">
         <img className="landing-logo" src={weConnectLogo} alt="WEconnect" />
-        <p className="landing-motto">Create, connect, prove.</p>
+        <div className="motto-bubbles">
+          {MOTTO.map((m) => (
+            <span className="motto-bubble" key={m.word}>
+              <span className="motto-bubble-dot" style={{ background: m.color }} />
+              {m.word}
+            </span>
+          ))}
+        </div>
 
         {event && (
           <div className="landing-event">

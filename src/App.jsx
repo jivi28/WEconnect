@@ -54,10 +54,20 @@ function MainApp() {
 
   if (!user || !profile) {
     if (authView === 'login') {
-      return <Login onSwitchToSignup={() => setAuthView('signup')} />
+      return (
+        <Login
+          onSwitchToSignup={() => setAuthView('signup')}
+          onHome={() => setAuthView('landing')}
+        />
+      )
     }
     if (authView === 'signup') {
-      return <Signup onSwitchToLogin={() => setAuthView('login')} />
+      return (
+        <Signup
+          onSwitchToLogin={() => setAuthView('login')}
+          onHome={() => setAuthView('landing')}
+        />
+      )
     }
     return (
       <Landing onSignup={() => setAuthView('signup')} onLogin={() => setAuthView('login')} />

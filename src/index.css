@@ -185,6 +185,26 @@ textarea:focus-visible {
   color: var(--we-red);
 }
 
+/* Clickable brand mark (components/BrandLogo.jsx) — replaces the old
+   .we-wordmark text across the auth/utility screens. */
+.brand-logo-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  line-height: 0;
+  display: inline-flex;
+}
+.brand-logo-img {
+  width: auto;
+  display: block;
+}
+/* Variant used inside .auth-card so it sits like the old wordmark did. */
+.auth-brand {
+  align-self: flex-start;
+  margin-bottom: 1.1rem;
+}
+
 /* ---------- Tile cards (events/projects) ---------- */
 
 .tile-grid {
@@ -1033,10 +1053,15 @@ textarea {
    gridded background; everything below is landing-specific. */
 .landing {
   align-items: flex-start;
+  /* Simpler backdrop than the gridded .auth-screen so the (now larger)
+     feature cards and motto bubbles read clearly. Scoped to landing only. */
+  background-image: radial-gradient(circle at 50% -10%, rgba(204, 0, 0, 0.06), transparent 60%);
+  background-size: 100% 100%;
+  background-color: var(--paper);
 }
 .landing-inner {
   width: 100%;
-  max-width: 920px;
+  max-width: 1040px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
@@ -1049,13 +1074,34 @@ textarea {
   width: auto;
   display: block;
 }
-.landing-motto {
+.motto-bubbles {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 1.1rem 0 0.25rem;
+}
+.motto-bubble {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.5rem 1.05rem;
   font-family: var(--font-display);
   font-weight: 800;
-  font-size: 1.6rem;
-  letter-spacing: -0.02em;
+  font-size: 1.1rem;
+  letter-spacing: -0.01em;
   color: var(--we-ink);
-  margin: 1rem 0 0.25rem;
+  box-shadow: 0 6px 16px -10px rgba(31, 31, 31, 0.4);
+}
+.motto-bubble-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
 }
 .landing-event {
   margin: 0.75rem 0 0.25rem;
@@ -1068,17 +1114,17 @@ textarea {
 }
 .feature-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.25rem;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
   width: 100%;
-  margin: 1.75rem 0;
+  margin: 1.9rem 0;
 }
 .feature-card {
   background: var(--surface);
   border: 1px solid var(--line);
-  border-radius: 14px;
-  padding: 1.5rem 1.25rem;
-  box-shadow: 0 16px 36px -24px rgba(31, 31, 31, 0.35);
+  border-radius: 18px;
+  padding: 2.25rem 1.75rem;
+  box-shadow: 0 18px 40px -24px rgba(31, 31, 31, 0.35);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1102,7 +1148,7 @@ textarea {
   display: inline-block;
 }
 .feature-title {
-  font-size: 1.45rem;
+  font-size: 1.65rem;
   font-weight: 800;
   margin: 0;
 }
@@ -1121,7 +1167,7 @@ textarea {
 }
 .feature-outcome {
   font-weight: 800;
-  font-size: 1.02rem;
+  font-size: 1.12rem;
   margin: 0;
 }
 .feature-note {
@@ -1155,6 +1201,9 @@ textarea {
   .landing-cta-row .btn-cta,
   .landing-cta-row .landing-login-btn {
     width: 100%;
+  }
+  .feature-grid {
+    grid-template-columns: 1fr;
   }
   .topbar-nav {
     order: 3;

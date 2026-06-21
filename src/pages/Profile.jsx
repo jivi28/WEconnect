@@ -45,8 +45,6 @@ export default function Profile({ onNavigate }) {
   const [networkProfile, setNetworkProfile] = useState(null)
   const [sourceEvent, setSourceEvent] = useState(null)
   const [myEvents, setMyEvents] = useState([])
-  const [recentProject, setRecentProject] = useState(null)
-  const [projectCount, setProjectCount] = useState(0)
   const [loadingExtras, setLoadingExtras] = useState(true)
   const [cvUploading, setCvUploading] = useState(false)
   const [cvError, setCvError] = useState('')
@@ -57,7 +55,7 @@ export default function Profile({ onNavigate }) {
 
   async function loadExtras() {
     setLoadingExtras(true)
-    const [{ data: net }, { data: events }, { data: hosted }, { data: members }, { data: owned }, sourceEventResult] =
+    const [{ data: net }, { data: events }, { data: hosted }, sourceEventResult] =
       await Promise.all([
         supabase.from('network_profiles').select('*').eq('user_id', user.id).maybeSingle(),
         supabase.from('user_events').select('event_id, events(*)').eq('user_id', user.id),
@@ -67,12 +65,6 @@ export default function Profile({ onNavigate }) {
         isWurthEmployee
           ? supabase.from('events').select('*').contains('host_ids', [user.id])
           : Promise.resolve({ data: [] }),
-        isWurthEmployee
-          ? Promise.resolve({ data: [] })
-          : supabase.from('project_members').select('project_id, created_at, projects(*)').eq('user_id', user.id),
-        isWurthEmployee
-          ? Promise.resolve({ data: [] })
-          : supabase.from('projects').select('*').eq('owner_id', user.id),
         profile.source_event_id
           ? supabase.from('events').select('name, event_date').eq('id', profile.source_event_id).maybeSingle()
           : Promise.resolve({ data: null })
@@ -84,12 +76,6 @@ export default function Profile({ onNavigate }) {
       .filter((e) => !attendedRows.some((r) => r.event_id === e.id))
       .map((e) => ({ event_id: e.id, events: e }))
     setMyEvents([...attendedRows, ...hostedRows])
-
-    const candidates = [...(members || []).map((m) => m.projects).filter(Boolean), ...(owned || [])]
-    const deduped = [...new Map(candidates.map((p) => [p.id, p])).values()]
-    deduped.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0))
-    setRecentProject(deduped[0] || null)
-    setProjectCount(deduped.length)
 
     setSourceEvent(sourceEventResult.data || null)
     setLoadingExtras(false)
@@ -374,12 +360,6 @@ export default function Profile({ onNavigate }) {
             <dt>Events attended</dt>
             <dd>{attended.length}</dd>
           </div>
-          {!isWurthEmployee && (
-            <div className="detail-row">
-              <dt>Projects joined</dt>
-              <dd>{projectCount}</dd>
-            </div>
-          )}
         </dl>
       </div>
     </div>
@@ -414,34 +394,6 @@ export default function Profile({ onNavigate }) {
         )}
       </div>
 
-      {!isWurthEmployee && (
-        <div className="card highlight-card">
-          <div className="card-header">
-            <h3>Project highlight</h3>
-            <button className="link-btn" onClick={() => onNavigate?.('projects')}>
-              See all
-            </button>
-          </div>
-          {loadingExtras ? (
-            <p className="muted">Loading…</p>
-          ) : recentProject ? (
-            <div className="project-reel">
-              <div
-                className="project-reel-thumb"
-                style={recentProject.thumbnail_url ? { backgroundImage: `url(${recentProject.thumbnail_url})` } : undefined}
-              >
-                {!recentProject.thumbnail_url && <span>No build yet</span>}
-              </div>
-              <p className="project-reel-name">{recentProject.name}</p>
-              <span className={`role-tag ${recentProject.status === 'past' ? '' : 'role-tag-strong'}`}>
-                {recentProject.status === 'past' ? 'Completed' : 'Ongoing'}
-              </span>
-            </div>
-          ) : (
-            <p className="muted">No projects yet — start or join one in the Projects tab.</p>
-          )}
-        </div>
-      )}
     </aside>
     </div>
   )

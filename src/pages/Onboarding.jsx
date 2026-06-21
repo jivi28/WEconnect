@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
+import BrandLogo from '../components/BrandLogo'
 
 const COLLABORATION_OPTIONS = [
   { value: 'yes', label: 'Yes' },
@@ -59,9 +60,7 @@ export default function Onboarding() {
   return (
     <div className="auth-screen">
       <div className="auth-card">
-        <p className="we-wordmark">
-          WE<span>connect</span>
-        </p>
+        <BrandLogo className="auth-brand" />
         <p className="eyebrow">Before you start</p>
         <h1>A few quick questions</h1>
         <p className="subtitle">This takes under a minute and only appears once.</p>

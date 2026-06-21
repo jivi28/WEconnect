@@ -1,4 +1,5 @@
 import { useAuth } from '../context/AuthContext'
+import BrandLogo from '../components/BrandLogo'
 
 // Shown instead of the main app for student/educator accounts whose
 // profiles.verification_status isn't "verified" yet (see App.jsx gating).
@@ -12,9 +13,7 @@ export default function VerificationPending() {
   return (
     <div className="auth-screen">
       <div className="auth-card">
-        <p className="we-wordmark">
-          WE<span>connect</span>
-        </p>
+        <BrandLogo className="auth-brand" />
         <p className="eyebrow">{rejected ? 'Verification failed' : 'Verification pending'}</p>
         <h1>{rejected ? "We couldn't verify your affiliation" : 'Hang tight — verifying your account'}</h1>
         <p className="subtitle">

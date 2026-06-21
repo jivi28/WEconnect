@@ -2,11 +2,10 @@ import { useState, useRef, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
-import weConnectLogo from '../assets/we-connect-logo.png'
+import weConnectLogo from '../assets/we-connect-logo-transparent.png'
 import Profile from './Profile'
 import Network from './Network'
 import EventsTab from './EventsTab'
-import ProjectsTab from './ProjectsTab'
 
 const BASE_TABS = [
   { id: 'profile', label: 'Profile' },
@@ -25,9 +24,9 @@ export default function Home() {
 
   const tabs = [
     ...BASE_TABS,
-    ...(isWurthEmployee ? [] : [{ id: 'projects', label: 'Projects' }]),
-    ...(isWurthEmployee ? [{ id: 'analysis', label: 'Event Analytics' }] : []),
-    { id: 'simulation', label: 'Simulation' }
+    ...(isWurthEmployee
+      ? [{ id: 'analysis', label: 'Event Analytics' }]
+      : [{ id: 'simulation', label: 'Simulation' }])
   ]
 
   return (
@@ -81,9 +80,8 @@ export default function Home() {
         {tab === 'profile' && <Profile onNavigate={setTab} />}
         {tab === 'network' && <Network />}
         {tab === 'events' && <EventsTab />}
-        {tab === 'projects' && !isWurthEmployee && <ProjectsTab />}
         {tab === 'analysis' && isWurthEmployee && <AnalysisTab />}
-        {tab === 'simulation' && <SimulationTab />}
+        {tab === 'simulation' && !isWurthEmployee && <SimulationTab />}
       </main>
     </div>
   )

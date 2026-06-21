@@ -5,6 +5,7 @@ import { supabase, SLIDES_BUCKET } from '../lib/supabase'
 import { buildRegisterUrl } from '../lib/registerUrl'
 import { formatDate } from '../lib/format'
 import RequireWurthEmployee from '../components/RequireWurthEmployee'
+import BrandLogo from '../components/BrandLogo'
 
 // Per-event management: upload slides, the event's (permanent) QR code, hosts.
 export default function AdminEvent() {
@@ -326,9 +327,7 @@ function EventStageShell({ children }) {
   return (
     <div className="shell">
       <header className="topbar">
-        <p className="we-wordmark" style={{ margin: 0 }}>
-          WE<span>connect</span>
-        </p>
+        <BrandLogo height={30} style={{ margin: 0 }} />
       </header>
       <main className="main">{children}</main>
     </div>

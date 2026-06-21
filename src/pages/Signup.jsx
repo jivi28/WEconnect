@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
 import RoleFields from '../components/RoleFields'
+import BrandLogo from '../components/BrandLogo'
 import { UNIVERSITY_EMAIL_ALLOWLIST } from '../constants/options'
 import { formatDate } from '../lib/format'
 import { readableAuthError } from './Login'
@@ -28,7 +29,7 @@ function passesMockAffiliationCheck(email) {
 // locked to that one event (source attribution), the "which event?" dropdown is
 // hidden, and a successful signup redirects to /slides to unlock the event's
 // slides instead of showing the email-confirm notice / MainApp gating.
-export default function Signup({ onSwitchToLogin, eventToken = null }) {
+export default function Signup({ onSwitchToLogin, eventToken = null, onHome }) {
   const { signup } = useAuth()
   const navigate = useNavigate()
   const [name, setName] = useState('')
@@ -147,9 +148,7 @@ export default function Signup({ onSwitchToLogin, eventToken = null }) {
     return (
       <div className="auth-screen">
         <div className="auth-card">
-          <p className="we-wordmark">
-            WE<span>connect</span>
-          </p>
+          <BrandLogo onHome={onHome} className="auth-brand" />
           <p className="eyebrow">Event registration</p>
           <h1>Registration</h1>
           <p className="error">{lockedEventErr}</p>
@@ -164,9 +163,7 @@ export default function Signup({ onSwitchToLogin, eventToken = null }) {
   return (
     <div className="auth-screen">
       <div className="auth-card">
-        <p className="we-wordmark">
-          WE<span>connect</span>
-        </p>
+        <BrandLogo onHome={onHome} className="auth-brand" />
         {eventToken && <p className="eyebrow">Event registration</p>}
         <h1>Create your account</h1>
         {eventToken ? (

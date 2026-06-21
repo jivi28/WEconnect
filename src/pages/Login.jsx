@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'
+import BrandLogo from '../components/BrandLogo'
 
-export default function Login({ onSwitchToSignup, onLoggedIn }) {
+export default function Login({ onSwitchToSignup, onLoggedIn, onHome }) {
   const { login } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -27,9 +28,7 @@ export default function Login({ onSwitchToSignup, onLoggedIn }) {
   return (
     <div className="auth-screen">
       <div className="auth-card">
-        <p className="we-wordmark">
-          WE<span>connect</span>
-        </p>
+        <BrandLogo onHome={onHome} className="auth-brand" />
         <h1>Log in</h1>
         <p className="subtitle">Create, connect, prove.</p>
 

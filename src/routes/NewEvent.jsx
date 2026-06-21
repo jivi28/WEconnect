@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import RequireWurthEmployee from '../components/RequireWurthEmployee'
+import BrandLogo from '../components/BrandLogo'
 
 // Standalone "create event" page — the "+ New event" entry point from the
 // Events tab lands here directly instead of on the admin overview (which
@@ -50,9 +51,7 @@ function NewEventCard() {
   return (
     <div className="shell">
       <header className="topbar">
-        <p className="we-wordmark" style={{ margin: 0 }}>
-          WE<span>connect</span>
-        </p>
+        <BrandLogo height={30} style={{ margin: 0 }} />
       </header>
       <main className="main">
         <div className="panel event-admin-panel">

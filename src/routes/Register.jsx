@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase'
 import Landing from '../components/Landing'
 import Login from '../pages/Login'
 import Signup from '../pages/Signup'
+import BrandLogo from '../components/BrandLogo'
 
 // QR target: /register?e=<qr_token>
 // Funnel: landing (shows which event) → event signup (event locked in) → slides.
@@ -32,9 +33,7 @@ export default function Register() {
     return (
       <div className="auth-screen">
         <div className="auth-card">
-          <p className="we-wordmark">
-            WE<span>connect</span>
-          </p>
+          <BrandLogo onHome={() => navigate('/')} className="auth-brand" />
           <p className="eyebrow">Event registration</p>
           <h1>Registration</h1>
           <p className="error">
@@ -49,12 +48,16 @@ export default function Register() {
   }
 
   if (step === 'signup') {
-    return <Signup eventToken={token} />
+    return <Signup eventToken={token} onHome={() => setStep('landing')} />
   }
 
   if (step === 'login') {
     return (
-      <Login onSwitchToSignup={() => setStep('signup')} onLoggedIn={() => navigate('/slides')} />
+      <Login
+        onSwitchToSignup={() => setStep('signup')}
+        onLoggedIn={() => navigate('/slides')}
+        onHome={() => setStep('landing')}
+      />
     )
   }
 
