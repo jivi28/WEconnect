@@ -1,0 +1,1280 @@
+:root {
+  --ink: #14151a;
+  --paper: #f7f7f5;
+  --surface: #ffffff;
+  --line: #e1e1dd;
+  --muted: #6b6b68;
+  --accent: #2d5bff;
+  --accent-dark: #1c3fd1;
+  --accent-soft: #e8ecff;
+  --teal: #00b88a;
+  --teal-soft: #e3f9f1;
+
+  /* Headlines use the same font as the mind map page (tailwind.config.js
+     fontFamily.sans) — no separate display font, so auth/profile/network
+     screens actually match the mind map instead of approximating it. */
+  --font-display: 'Inter', Helvetica, Arial, sans-serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
+  /* Würth Elektronik brand tokens — copied directly from tailwind.config.js
+     (theme.extend.colors.brand / .ink), which is the real, already-in-use
+     palette on the mind map page (also hardcoded in NetworkGraph.tsx's
+     LINE_COLOR/EXPERT_LINE_COLOR). Not the earlier unverified guesses. */
+  --we-red: #cc0000;
+  --we-red-dark: #a30000;
+  --we-red-soft: #fdecea;
+  --we-ink: #1f1f1f;
+  --we-gray-700: #605d5c;
+  --we-gray-200: #dedede;
+  --we-gray-50: #f6f6f6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: radial-gradient(circle at 12% -10%, rgba(204, 0, 0, 0.05), transparent 40%), var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+a,
+.tile-card,
+.match-card,
+.topbar-link {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease, color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  margin: 0 0 0.25rem;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+}
+
+h1 {
+  font-size: 2.3rem;
+}
+h2 {
+  font-size: 1.55rem;
+}
+h3 {
+  font-size: 1.1rem;
+}
+
+p {
+  margin: 0 0 0.75rem;
+  line-height: 1.5;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  color: var(--muted);
+  margin: 0 0 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.eyebrow::before {
+  content: '';
+  display: inline-block;
+  width: 12px;
+  height: 3px;
+  background: var(--we-red);
+}
+
+.subtitle {
+  color: var(--muted);
+}
+
+.muted {
+  color: var(--muted);
+}
+
+button {
+  font-family: inherit;
+}
+
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- Auth screens ---------- */
+
+.loading-screen {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+
+.auth-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  background-image: radial-gradient(circle at 50% 0%, rgba(204, 0, 0, 0.08), transparent 55%),
+    linear-gradient(var(--line) 1px, transparent 1px), linear-gradient(90deg, var(--line) 1px, transparent 1px);
+  background-size: 100% 100%, 28px 28px, 28px 28px;
+  background-position: center;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-top: 4px solid var(--we-red);
+  border-radius: 4px;
+  padding: 2.25rem;
+  box-shadow: 0 24px 60px -20px rgba(20, 21, 26, 0.25), 0 2px 6px rgba(20, 21, 26, 0.06);
+}
+
+.node-mark {
+  margin-bottom: 0.5rem;
+}
+.node-mark svg .node {
+  fill: var(--ink);
+}
+.node-mark svg .node-accent {
+  fill: var(--accent);
+}
+.node-mark svg .edge {
+  stroke: var(--ink);
+  stroke-width: 1.5;
+  opacity: 0.35;
+}
+.node-mark svg .edge-faint {
+  opacity: 0.12;
+}
+
+.switch-line {
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.we-wordmark {
+  display: flex;
+  align-items: baseline;
+  gap: 0.15rem;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.3rem;
+  letter-spacing: -0.02em;
+  color: var(--we-ink);
+  margin-bottom: 1.1rem;
+}
+.we-wordmark span {
+  color: var(--we-red);
+}
+
+/* ---------- Tile cards (events/projects) ---------- */
+
+.tile-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.tile-card {
+  position: relative;
+  height: 150px;
+  border-radius: 4px;
+  padding: 1rem;
+  display: flex;
+  align-items: flex-end;
+  background-image: linear-gradient(160deg, var(--we-ink) 0%, var(--we-red-dark) 120%);
+  box-shadow: 0 14px 30px -16px rgba(31, 31, 31, 0.5);
+  overflow: hidden;
+  cursor: default;
+}
+.tile-card:hover {
+  transform: translateY(-4px) scale(1.015);
+  box-shadow: 0 22px 40px -16px rgba(204, 0, 0, 0.45);
+}
+
+.tile-card-label {
+  color: var(--surface);
+  font-weight: 800;
+  font-size: 1rem;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+.tile-card-meta {
+  position: absolute;
+  top: 0.7rem;
+  left: 0.9rem;
+  color: rgba(255, 255, 255, 0.75);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ---------- Forms ---------- */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.field span {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+input[type='text'],
+input[type='email'],
+input[type='password'],
+select,
+textarea {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+input[type='text']:focus,
+input[type='email']:focus,
+input[type='password']:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+textarea {
+  resize: vertical;
+}
+
+.role-picker {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.role-pill {
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.role-pill-active {
+  background: var(--ink);
+  color: white;
+  border-color: var(--ink);
+}
+
+.role-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding-top: 0.25rem;
+}
+
+.error {
+  color: #c4373b;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.success {
+  color: var(--teal);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dark) 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 0.7rem 1.3rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 24px -12px rgba(45, 91, 255, 0.5);
+}
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px -10px rgba(45, 91, 255, 0.6);
+}
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-cta {
+  background: linear-gradient(135deg, var(--we-red) 0%, var(--we-red-dark) 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 0.85rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  flex-shrink: 0;
+  box-shadow: 0 14px 30px -14px rgba(204, 0, 0, 0.55);
+}
+.btn-cta:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: linear-gradient(135deg, var(--we-red-dark) 0%, var(--we-red-dark) 100%);
+  box-shadow: 0 18px 34px -12px rgba(163, 0, 0, 0.6);
+}
+.btn-cta:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-danger {
+  background: var(--we-red);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 0.7rem 1.3rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 24px -12px rgba(204, 0, 0, 0.5);
+}
+.btn-danger:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: var(--we-red-dark);
+}
+.btn-danger:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-secondary {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 0.55rem 1rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-secondary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px -10px rgba(45, 91, 255, 0.4);
+}
+
+/* WE-brand square-arrow CTA — label text beside a solid red square with a
+   white chevron, per the we-online.com button pattern. Used on auth screens
+   only for now; the rest of the app still uses .btn-primary/.btn-secondary. */
+.btn-we {
+  display: inline-flex;
+  align-items: center;
+  gap: 0;
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+.btn-we:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.btn-we:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+.btn-we-label {
+  background: var(--surface);
+  color: var(--we-ink);
+  font-weight: 700;
+  font-size: 0.95rem;
+  padding: 0.75rem 1.3rem;
+  border: 1px solid var(--we-gray-200);
+  border-right: none;
+  border-radius: 4px 0 0 4px;
+}
+.btn-we-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.9rem;
+  height: 2.9rem;
+  background: var(--we-red);
+  border-radius: 0 4px 4px 0;
+  box-shadow: 0 10px 24px -10px rgba(204, 0, 0, 0.6);
+}
+.btn-we:hover:not(:disabled) .btn-we-arrow {
+  background: var(--we-red-dark);
+  box-shadow: 0 14px 28px -10px rgba(163, 0, 0, 0.7);
+}
+.btn-we-arrow svg {
+  width: 15px;
+  height: 15px;
+}
+
+.link-btn {
+  background: none;
+  border: none;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 0.88rem;
+  padding: 0;
+}
+.link-btn:hover {
+  text-decoration: underline;
+}
+
+/* ---------- Dashboard shell — single persistent top header,
+   light background + WE red accent, used on every authenticated page.
+   Replaces the old dark sidebar (was unbranded leftover scaffold). ---------- */
+
+.shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 0.85rem 2rem;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--we-gray-200);
+  box-shadow: 0 4px 24px -16px rgba(31, 31, 31, 0.25);
+}
+
+.topbar-nav {
+  display: flex;
+  gap: 0.4rem;
+  flex: 1;
+}
+
+.topbar-link {
+  background: none;
+  border: none;
+  border-radius: 8px;
+  padding: 0.55rem 1rem;
+  font-family: var(--font-body);
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--we-gray-700);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.topbar-link:hover {
+  color: var(--we-ink);
+  background: var(--we-gray-50);
+}
+
+.topbar-link-active {
+  color: var(--surface);
+  background: var(--we-red);
+  box-shadow: 0 8px 18px -8px rgba(204, 0, 0, 0.55);
+}
+.topbar-link-active:hover {
+  color: var(--surface);
+  background: var(--we-red-dark);
+}
+
+.topbar-tag {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  color: inherit;
+  opacity: 0.75;
+}
+
+.topbar-account {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 0.85rem;
+  color: var(--we-gray-700);
+}
+.topbar-account strong {
+  color: var(--we-ink);
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--we-red), var(--we-ink));
+  color: var(--surface);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0;
+  flex-shrink: 0;
+}
+
+.avatar-lg {
+  width: 4.2rem;
+  height: 4.2rem;
+  font-size: 1.4rem;
+  box-shadow: 0 8px 20px rgba(204, 0, 0, 0.25);
+}
+
+.profile-header {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  margin-bottom: 1.75rem;
+}
+.profile-header .eyebrow {
+  margin-bottom: 0.15rem;
+}
+.profile-header h2 {
+  margin: 0;
+}
+
+.main {
+  flex: 1;
+  padding: 2.5rem 3rem;
+  background: linear-gradient(180deg, var(--we-gray-50) 0%, var(--paper) 100%);
+}
+
+.panel {
+  max-width: 760px;
+}
+
+.placeholder {
+  max-width: 540px;
+  padding: 2rem;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+/* ---------- Cards ---------- */
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1.6rem;
+  margin-top: 1.25rem;
+  box-shadow: 0 16px 36px -24px rgba(31, 31, 31, 0.35);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.card-danger {
+  border-color: rgba(204, 0, 0, 0.25);
+  background: #fffaf9;
+}
+
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.detail-list {
+  margin: 0.75rem 0 0;
+}
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.9rem;
+}
+.detail-row dt {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  text-transform: capitalize;
+}
+.detail-row dd {
+  margin: 0;
+}
+
+.role-tag {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.role-tag-strong {
+  color: var(--we-red);
+  font-weight: 700;
+}
+
+/* ---------- Network matches ---------- */
+
+.match-list {
+  list-style: none;
+  padding: 0;
+  margin: 1.25rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.match-card {
+  display: grid;
+  grid-template-columns: 60px 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 1.1rem;
+  box-shadow: 0 10px 24px -20px rgba(31, 31, 31, 0.3);
+}
+.match-card:hover {
+  border-color: var(--we-red);
+  transform: translateY(-2px);
+  box-shadow: 0 16px 32px -16px rgba(204, 0, 0, 0.3);
+}
+
+.match-name {
+  font-weight: 600;
+  margin: 0 0 0.2rem;
+}
+
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.tag {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+}
+
+.tag-outline {
+  background: transparent;
+  border: 1px dashed var(--accent);
+}
+
+.tag-shared {
+  background: var(--teal-soft);
+  color: var(--teal);
+  border: none;
+  font-weight: 600;
+}
+
+.tag-remove {
+  background: none;
+  border: none;
+  color: inherit;
+  margin-left: 0.35rem;
+  padding: 0;
+  cursor: pointer;
+  font-size: 0.85rem;
+  line-height: 1;
+}
+
+.match-action {
+  text-align: right;
+}
+
+/* ---------- Embedded network map ---------- */
+
+.map-embed {
+  position: relative;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 24px 60px -28px rgba(31, 31, 31, 0.45);
+}
+
+.map-embed-frame {
+  width: 100%;
+  height: calc(100vh - 220px);
+  border: none;
+  display: block;
+}
+
+.map-embed-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(31, 31, 31, 0.05);
+  backdrop-filter: blur(1px);
+  color: var(--we-ink);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+/* ---------- Multi-select dropdown ---------- */
+
+.multiselect {
+  position: relative;
+}
+
+.multiselect-button {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.multiselect-button-active {
+  border-color: var(--accent);
+}
+
+.multiselect-panel {
+  position: absolute;
+  top: calc(100% + 0.4rem);
+  left: 0;
+  right: 0;
+  z-index: 10;
+  max-height: 220px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(20, 21, 26, 0.08);
+  padding: 0.3rem;
+}
+
+.multiselect-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.5rem;
+  border-radius: 6px;
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.multiselect-option:hover {
+  background: var(--accent-soft);
+}
+
+/* ---------- Profile highlights ---------- */
+
+.profile-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+  /* Centers the whole profile page (header, role/CV/network cards, AND the
+     highlights aside) within .main's available width instead of leaving it
+     pinned to the left edge with empty space on the right. */
+  max-width: 1220px;
+  margin: 0 auto;
+}
+
+.profile-main {
+  flex: 1;
+  min-width: 0;
+  /* Wider than the shared .panel cap (760px) — the profile's own info
+     column has room to breathe that other single-column .panel pages don't
+     need. Same specificity as .panel, so ordering (this rule comes later)
+     is what makes it win; keep it below .panel in the stylesheet. */
+  max-width: 860px;
+}
+
+.profile-aside {
+  /* Grows into whatever room is left next to .profile-main (which is capped
+     at 760px), then align-items centers the fixed-width highlight cards
+     within that grown space instead of leaving them pinned to its left
+     edge, flush against the main column. */
+  flex: 1 1 320px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profile-aside .card:first-child {
+  margin-top: 0;
+}
+
+.highlight-card {
+  width: 100%;
+  max-width: 320px;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-dot-upcoming {
+  background: var(--we-red);
+}
+
+.status-dot-past {
+  background: var(--teal);
+}
+
+.sidebar-event-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.sidebar-event-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  background: var(--we-gray-50);
+  border-radius: 8px;
+  padding: 0.55rem 0.8rem;
+}
+
+.sidebar-event-name {
+  margin: 0;
+  font-weight: 600;
+  font-size: 0.88rem;
+}
+
+.sidebar-event-date {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+.project-reel-thumb {
+  height: 120px;
+  border-radius: 10px;
+  margin-top: 0.75rem;
+  background-image: linear-gradient(160deg, var(--we-ink) 0%, var(--we-red-dark) 120%);
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 0.8rem;
+}
+
+.project-reel-name {
+  margin: 0.75rem 0 0.35rem;
+  font-weight: 700;
+}
+
+/* ---------- Events page ---------- */
+
+.events-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+}
+
+.events-sidebar {
+  flex: 0 0 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.events-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.events-main-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.sidebar-section .eyebrow {
+  margin-bottom: 0.25rem;
+}
+
+.tile-card-signup {
+  position: absolute;
+  bottom: 0.75rem;
+  right: 0.75rem;
+  background: var(--surface);
+  color: var(--we-ink);
+  border: none;
+  border-radius: 999px;
+  padding: 0.35rem 0.8rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tile-card-signup:hover:not(:disabled) {
+  background: var(--we-red);
+  color: var(--surface);
+}
+
+.tile-card-signup:disabled {
+  cursor: default;
+  opacity: 0.85;
+}
+
+.tile-card-signup-static {
+  cursor: default;
+  background: var(--teal-soft);
+  color: var(--teal);
+}
+
+/* ---------- Projects page ---------- */
+
+.section-heading {
+  margin-top: 1.75rem;
+}
+
+.match-thumb {
+  width: 60px;
+  height: 60px;
+  border-radius: 10px;
+  background-image: linear-gradient(160deg, var(--we-ink) 0%, var(--we-red-dark) 120%);
+  background-size: cover;
+  background-position: center;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 760px) {
+  .topbar {
+    flex-wrap: wrap;
+    padding: 0.75rem 1.1rem;
+  }
+  .topbar-nav {
+    order: 3;
+    width: 100%;
+    overflow-x: auto;
+  }
+  .topbar-account span {
+    display: none;
+  }
+  .main {
+    padding: 1.5rem;
+  }
+  .match-card {
+    grid-template-columns: 1fr;
+    text-align: left;
+  }
+  .profile-layout,
+  .events-layout {
+    flex-direction: column;
+  }
+  .profile-aside,
+  .events-sidebar {
+    flex: 1 1 auto;
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+
+/* QR feature (routes/Admin, Register, Slides): only the classes not already
+   defined above — .card and .muted reuse the app's existing styles.
+   routes/AdminEvent and routes/NewEvent use the shell/card/form classes
+   below instead, to match the rest of the app. */
+.wrap { max-width: 720px; margin: 0 auto; padding: 24px; }
+.err { color: #c8102e; font-size: 13px; }
+.ok { color: #1a7f37; font-size: 13px; }
+.row { display: flex; gap: 8px; align-items: center; }
+.qr { margin-top: 8px; max-width: 200px; }
+button.secondary { background: #444; }
+
+/* ---------- Event admin pages (routes/AdminEvent, routes/NewEvent) ---------- */
+
+.admin-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  text-decoration: none;
+  color: var(--we-gray-700);
+  font-weight: 700;
+  font-size: 0.92rem;
+  margin-bottom: 1.5rem;
+}
+.admin-back-link:hover {
+  color: var(--we-red);
+}
+.admin-back-link svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.qr-card-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 1.25rem;
+  margin-top: 0.75rem;
+}
+
+.qr-image {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.75rem;
+  width: 150px;
+  height: 150px;
+  flex-shrink: 0;
+}
+
+.qr-link {
+  flex: 1;
+  min-width: 200px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--muted);
+  word-break: break-all;
+  background: var(--we-gray-50);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+}
+
+.host-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.85rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.host-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--we-gray-50);
+  border-radius: 8px;
+  padding: 0.55rem 0.8rem;
+  font-size: 0.88rem;
+}
+
+.host-add-row {
+  display: flex;
+  gap: 0.6rem;
+  margin-top: 1rem;
+}
+.host-add-row input {
+  flex: 1;
+}
+
+.file-field {
+  margin-top: 0.85rem;
+}
+
+.link-btn-danger {
+  background: none;
+  border: none;
+  color: var(--we-red);
+  cursor: pointer;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0;
+}
+.link-btn-danger:hover {
+  text-decoration: underline;
+}
+
+.field-alert-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.6rem;
+}
+
+.field-alert {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  line-height: 1.2;
+  animation: field-alert-in 0.15s ease;
+}
+
+.field-alert-error {
+  background: var(--we-red-soft);
+  color: var(--we-red-dark);
+}
+
+.field-alert-success {
+  background: var(--teal-soft);
+  color: var(--teal);
+}
+
+/* ---------- WE-red button variants (event admin pages use these instead of
+   the blue .btn-primary/.btn-secondary, to match the rest of the brand) ---------- */
+
+.btn-primary-we {
+  background: linear-gradient(135deg, var(--we-red) 0%, var(--we-red-dark) 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 0.7rem 1.3rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 24px -12px rgba(204, 0, 0, 0.5);
+}
+.btn-primary-we:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px -10px rgba(163, 0, 0, 0.6);
+}
+.btn-primary-we:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.btn-secondary-we {
+  background: var(--we-red-soft);
+  color: var(--we-red-dark);
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 0.55rem 1rem;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-secondary-we:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px -10px rgba(204, 0, 0, 0.3);
+}
+.btn-secondary-we:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Scoped override so event admin pages (AdminEvent, NewEvent) use red focus
+   rings/checkboxes instead of the site-wide blue accent — kept local to
+   .event-admin-panel so Login/Signup/Network/Profile/Projects are untouched. */
+.event-admin-panel input:focus,
+.event-admin-panel textarea:focus,
+.event-admin-panel select:focus {
+  border-color: var(--we-red);
+  box-shadow: 0 0 0 3px var(--we-red-soft);
+}
+.event-admin-panel input[type='checkbox'] {
+  accent-color: var(--we-red);
+}
+
+/* ---------- Event detail modal (students/educators viewing an event) ---------- */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(31, 31, 31, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 50;
+}
+
+.modal-card {
+  max-width: 440px;
+  width: 100%;
+  margin-top: 0;
+  position: relative;
+}
+
+.modal-close {
+  position: absolute;
+  top: 1.1rem;
+  right: 1.1rem;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: var(--muted);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0;
+}
+.modal-close:hover {
+  color: var(--we-red);
+}
+
+@keyframes field-alert-in {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
