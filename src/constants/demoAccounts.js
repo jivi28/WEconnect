@@ -13,6 +13,7 @@ export const DEMO_ACCOUNTS = [
     label: 'Student',
     color: 'var(--we-red)',
     email: 'demo.student@example.com',
+    password: DEMO_PASSWORD,
     name: 'Demo Student',
     username: 'demo_student',
     roleData: {
@@ -27,6 +28,7 @@ export const DEMO_ACCOUNTS = [
     label: 'Educator',
     color: '#e0a200',
     email: 'demo.educator@example.com',
+    password: DEMO_PASSWORD,
     name: 'Demo Educator',
     username: 'demo_educator',
     roleData: {
@@ -40,6 +42,7 @@ export const DEMO_ACCOUNTS = [
     label: 'Würth Employee',
     color: '#1d9d5b',
     email: 'demo.wurth@example.com',
+    password: DEMO_PASSWORD,
     name: 'Demo Würth Employee',
     username: 'demo_wurth',
     roleData: {
