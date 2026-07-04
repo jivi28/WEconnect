@@ -1,4 +1,4 @@
-# WEconnect
+# WEconnect: live on: https://weconnect-ruddy.vercel.app/
 
 A starter for the login → role-based profile → "build your network" flow, built with React (Vite) and Supabase (Postgres + Auth). No backend server to run — Supabase hosts the database and handles auth.
 
