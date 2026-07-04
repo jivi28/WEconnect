@@ -1,5 +1,9 @@
+import { useState } from 'react'
 import weConnectLogo from '../assets/we-connect-logo-transparent.png'
 import { formatDate } from '../lib/format'
+import { useAuth } from '../context/AuthContext'
+import { DEMO_ACCOUNTS } from '../constants/demoAccounts'
+import { readableAuthError } from '../pages/Login'
 
 // The motto words, shown as separate colorful bubbles (colors match FEATURES).
 const MOTTO = [
@@ -39,6 +43,22 @@ const FEATURES = [
 ]
 
 export default function Landing({ event = null, onSignup, onLogin }) {
+  const { demoLogin } = useAuth()
+  const [demoBusy, setDemoBusy] = useState(null) // role currently logging in, or null
+  const [demoError, setDemoError] = useState('')
+
+  async function handleDemoLogin(account) {
+    setDemoError('')
+    setDemoBusy(account.role)
+    try {
+      // On success MainApp re-renders into the app on its own (auth state).
+      await demoLogin(account)
+    } catch (err) {
+      setDemoError(readableAuthError(err))
+      setDemoBusy(null)
+    }
+  }
+
   return (
     <div className="auth-screen landing">
       <div className="landing-inner">
@@ -91,6 +111,29 @@ export default function Landing({ event = null, onSignup, onLogin }) {
             Log in
           </button>
         </div>
+
+        {/* QR registration (`event` set) is about signing up for that event,
+            so the demo shortcut only appears on the generic front door. */}
+        {!event && (
+          <div className="landing-demo">
+            <p className="landing-demo-label">Just looking around? Explore with a demo account:</p>
+            <div className="landing-demo-row">
+              {DEMO_ACCOUNTS.map((account) => (
+                <button
+                  type="button"
+                  key={account.role}
+                  className="landing-demo-btn"
+                  onClick={() => handleDemoLogin(account)}
+                  disabled={demoBusy !== null}
+                >
+                  <span className="landing-demo-dot" style={{ background: account.color }} />
+                  {demoBusy === account.role ? 'Logging in…' : `Demo: ${account.label}`}
+                </button>
+              ))}
+            </div>
+            {demoError && <p className="error">{demoError}</p>}
+          </div>
+        )}
       </div>
     </div>
   )

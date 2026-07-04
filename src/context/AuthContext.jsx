@@ -100,6 +100,42 @@ export function AuthProvider({ children }) {
     return data.user
   }
 
+  // One-click sign-in for the landing page's demo buttons (see
+  // constants/demoAccounts.js). Provisions the account on first use through
+  // the normal signup path, then marks onboarding complete so the demo drops
+  // straight into the app instead of the questionnaire.
+  async function demoLogin(demo) {
+    let user
+    try {
+      user = await login({ email: demo.email, password: demo.password })
+    } catch (err) {
+      if (!(err?.message || '').includes('Invalid login credentials')) throw err
+      const { user: created, needsEmailConfirmation } = await signup({
+        name: demo.name,
+        username: demo.username,
+        email: demo.email,
+        password: demo.password,
+        role: demo.role,
+        roleData: demo.roleData,
+        verificationStatus: 'verified'
+      })
+      if (needsEmailConfirmation) {
+        // The demo address can't receive mail, so this project can't
+        // auto-provision from the client — seed the accounts server-side.
+        throw new Error(
+          'This project requires email confirmation, so the demo account must be ' +
+            'created once via supabase/seed_demo_accounts.sql.'
+        )
+      }
+      user = created
+    }
+    // Idempotent: also repairs a demo account that was created but never
+    // finished this step (e.g. the tab closed mid-provision).
+    await supabase.from('profiles').update({ onboarding_completed: true }).eq('id', user.id)
+    await loadProfile(user.id)
+    return user
+  }
+
   async function logout() {
     await supabase.auth.signOut()
   }
@@ -117,6 +153,7 @@ export function AuthProvider({ children }) {
     loading,
     signup,
     login,
+    demoLogin,
     logout,
     updateProfile
   }
