@@ -1,4 +1,32 @@
-# WEconnect: live on: https://weconnect-ruddy.vercel.app/
+# WEconnect — Event ROI & Networking Platform for Würth Elektronik
+
+**2nd place, Würth Elektronik challenge track — TUM Science Hackathon 2026
+(June 2026).**
+
+A role-based web platform for Würth Elektronik events: attendee profiles and
+networking, an Event ROI analytics dashboard for Würth employees, QR-code event
+registration and an embedded product simulation. Built by a team of six during
+the three-day hackathon.
+
+### Contributions by [@jivi28](https://github.com/jivi28)
+
+- **Event ROI analysis module** — composite 0–100 ROI score per event from user
+  acquisition, connections and simulation engagement, with confidence-weighted
+  smoothing so small events cannot post inflated scores (commits `7ac6f04`,
+  tuned in `10b6eb6`).
+- **Live data layer** — scraper for Würth Elektronik events (we-online.com),
+  geocoding, Supabase schema and seed scripts (`10b6eb6`).
+- **QR-code event registration** for admins (`b19fcbf`).
+- **Integration** — project scaffold, wiring the teammates' Simulation app into
+  the section menu, Vercel deployment and demo login.
+
+The ROI module was later moved into `analysis-dashboard/` by teammates' commits,
+so `git blame` on those files shows other names; the original commits are
+listed above.
+
+---
+
+## Base app
 
 A starter for the login → role-based profile → "build your network" flow, built with React (Vite) and Supabase (Postgres + Auth). No backend server to run — Supabase hosts the database and handles auth.
 
@@ -77,7 +105,7 @@ button that switches a local `tab` state; the matching component renders below i
 `<main>`. The first‑party sections (Profile, Network, Events, Projects) are React
 components in `src/pages/`.
 
-Two sections are teammates' standalone **Next.js** apps, vendored into this repo and
+Two sections are standalone **Next.js** apps, vendored into this repo and
 embedded by iframe rather than ported into the Vite app (they rely on Next's App
 Router/server routes and a separate React 19 + Tailwind v4 toolchain):
 
